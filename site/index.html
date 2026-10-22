@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E2833">
+<meta name="robots" content="noindex,nofollow">
+<title>工程專案頁｜平安住</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css">
+<style>
+body{padding-bottom:calc(var(--navh) + env(safe-area-inset-bottom,0px) + 16px)}
+nav.bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);display:grid;grid-template-columns:repeat(5,1fr)}
+nav.bar button{height:var(--navh);background:none;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--muted);font-size:12px;cursor:pointer}
+nav.bar svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8}
+nav.bar button[aria-selected="true"]{color:var(--accent);font-weight:700}
+section.pg{display:none;padding:20px 0}
+section.pg.on{display:block}
+.adm{display:none !important} body.admin .adm{display:block !important} body.admin form.adm{display:grid !important}
+.admtag{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:10px;z-index:31;background:var(--accent);color:#fff;font-size:12px;border-radius:99px;padding:2px 10px;display:none;text-decoration:none}
+body.admin .admtag{display:block}
+.stedit{padding:10px 0;border-bottom:1px solid var(--line)}
+.stedit:last-of-type{border-bottom:0}
+.stedit .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.stedit select{padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--paper)}
+.plan .x{position:absolute;top:14px;right:14px;background:rgba(0,0,0,.65);color:#fff;border:0;border-radius:6px;font-size:13px;padding:4px 8px;cursor:pointer}
+#gone{display:none}
+</style>
+</head>
+<body>
+<a class="admtag" id="hubLink" href="../">平安住管理模式 · 回總覽</a>
+<header class="top">
+  <div class="wrap">
+    <div class="firm">平安住股份有限公司・工程專案頁</div>
+    <h1 id="caseName">讀取中…</h1>
+    <div class="addr" id="caseAddr"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="sysNote" class="note" style="display:none"></div>
+  <div id="gone" class="empty" style="margin-top:24px"></div>
+
+  <div id="pages">
+  <!-- 總覽 -->
+  <section class="pg on" id="pg-home">
+    <div class="kpis">
+      <div class="kpi"><div class="k">合約狀態</div><div class="v" id="kSign">—</div></div>
+      <div class="kpi"><div class="k">目前進度</div><div class="v" id="kStage">—</div></div>
+      <div class="kpi wide"><div class="k" id="kTotalK">合約總價</div><div class="v" id="kTotal">—</div></div>
+      <div class="kpi wide" id="kDatesBox" style="display:none"><div class="k">預定工期</div><div class="v" id="kDates"></div></div>
+    </div>
+    <h3 style="margin-top:18px">施工階段與驗收點</h3>
+    <div class="card" id="stages"></div>
+    <h3>付款期程</h3>
+    <div class="card" id="pays"></div>
+    <h3>最新施工紀錄</h3>
+    <div id="latest"></div>
+  </section>
+
+  <!-- 合約 -->
+  <section class="pg" id="pg-contract">
+    <h2>合約文件</h2>
+    <p class="lead">合約以紙本簽署，掃描檔上傳於此備查；日後的追加合約、變更簽認也會陸續放在這裡。</p>
+    <div class="card adm">
+      <b>上傳合約文件</b>
+      <form class="f" id="docForm" style="margin-top:8px">
+        <label>類型<select name="type"><option>主合約（簽署版）</option><option>報價單</option><option>追加合約</option><option>變更簽認</option><option>其他文件</option></select></label>
+        <label>名稱<input name="title" required placeholder="例：木作工程追加合約"></label>
+        <label>簽訂日期<input type="date" name="date"></label>
+        <label>檔案（照片或 PDF，可多選，依頁序選取）<input type="file" name="files" accept="image/*,application/pdf" multiple required></label>
+        <button class="btn acc" type="submit">上傳文件</button>
+      </form>
+    </div>
+    <div id="docList"></div>
+
+    <div class="card adm">
+      <b>預定工期</b>
+      <form class="f" id="fieldsForm" style="margin-top:8px">
+        <label>預定開工日<input type="date" name="startDate"></label>
+        <label>預定完工日<input type="date" name="endDate"></label>
+        <button class="btn" type="submit">儲存</button>
+      </form>
+    </div>
+
+    <h3>保險單</h3>
+    <div class="card">
+      <div id="policyList"></div>
+      <form class="f adm" id="policyForm" style="margin-top:10px">
+        <label>上傳保單照片（可多張）<input type="file" name="files" accept="image/*" multiple></label>
+        <button class="btn" type="submit">上傳保單</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- 平面圖 -->
+  <section class="pg" id="pg-plans">
+    <h2>平面圖</h2>
+    <p class="lead">點圖片會開新頁，可用兩指放大查看尺寸。</p>
+    <div class="card adm">
+      <b>上傳平面圖</b>
+      <form class="f" id="planForm" style="margin-top:8px">
+        <label>位置<select name="area"></select></label>
+        <label>說明（選填）<input name="caption" placeholder="例：店面・儲藏室"></label>
+        <label>圖檔（可多選）<input type="file" name="files" accept="image/*" multiple></label>
+        <button class="btn acc" type="submit">上傳</button>
+      </form>
+    </div>
+    <div id="planList"></div>
+  </section>
+
+  <!-- 施工前 -->
+  <section class="pg" id="pg-before">
+    <h2>施工前現況</h2>
+    <p class="lead">施工前各區域原始狀況，作為驗收及釐清既有問題（如原有漏水、管線老化）的依據。</p>
+    <div class="card adm">
+      <b>上傳現況照片</b>
+      <form class="f" id="beforeForm" style="margin-top:8px">
+        <label>位置<select name="area"></select></label>
+        <label>說明（選填）<input name="caption" placeholder="例：2F 廁所壁面滲水"></label>
+        <label>照片（可多選）<input type="file" name="files" accept="image/*" multiple></label>
+        <button class="btn acc" type="submit">上傳</button>
+      </form>
+    </div>
+    <div id="beforeList"></div>
+  </section>
+
+  <!-- 進度 -->
+  <section class="pg" id="pg-progress">
+    <h2>施工進度</h2>
+    <p class="lead">每次施工的紀錄、照片與查驗結果。</p>
+    <div class="card adm">
+      <b>階段與驗收點</b>
+      <div id="statusEditor"></div>
+    </div>
+    <div class="card adm">
+      <b>新增施工紀錄</b>
+      <form class="f" id="updForm" style="margin-top:8px">
+        <label>日期<input type="date" name="date" required></label>
+        <label>階段<select name="stage"></select></label>
+        <label>標題<input name="title" required placeholder="例：2F～3F 冷熱水管配置完成"></label>
+        <label>說明<textarea name="note" placeholder="施工內容、需業主確認的事項"></textarea></label>
+        <label>照片（可多選）<input type="file" name="files" accept="image/*" multiple></label>
+        <button class="btn acc" type="submit">發布</button>
+      </form>
+    </div>
+    <div id="timeline"></div>
+  </section>
+  </div>
+
+  <footer><span id="firm"></span><br><button class="link" id="admBtn">平安住登入</button></footer>
+</main>
+
+<nav class="bar" role="tablist" id="nav">
+  <button data-p="home" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>總覽</button>
+  <button data-p="contract" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h5"/></svg>合約</button>
+  <button data-p="plans" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M3 4h18v16H3z"/><path d="M3 11h8V4M11 20v-5h10"/></svg>平面圖</button>
+  <button data-p="before" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 7h4l2-3h4l2 3h4v13H4z"/><circle cx="12" cy="13" r="3.5"/></svg>施工前</button>
+  <button data-p="progress" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>進度</button>
+</nav>
+
+<div class="spin" id="spin"><div id="spinTxt">處理中…</div></div>
+
+<script src="../assets/common.js"></script>
+<script>
+const ID = (new URLSearchParams(location.search).get('id') || '').trim().toLowerCase();
+const D = { case: null, cfg: {}, state: { stages: {}, checks: {}, paid: {}, fields: {} }, docs: [], photos: [], updates: [] };
+let ADMIN = false;
+$('#firm').textContent = FIRM;
+
+/* ---------- nav ---------- */
+$$('nav.bar button').forEach(b => b.onclick = () => go(b.dataset.p));
+function go(p) {
+  $$('nav.bar button').forEach(b => b.setAttribute('aria-selected', b.dataset.p === p));
+  $$('section.pg').forEach(s => s.classList.toggle('on', s.id === 'pg-' + p)); window.scrollTo(0, 0);
+  history.replaceState(null, '', location.search + '#' + p);
+}
+const h0 = location.hash.slice(1); if (['home', 'contract', 'plans', 'before', 'progress'].includes(h0)) go(h0);
+
+/* ---------- 合約文件 ---------- */
+const mainDoc = () => D.docs.find(isMainDoc);
+function renderDocs() {
+  const md = mainDoc();
+  $('#kSign').innerHTML = md ? `已簽約<span class="sub">${esc(rocS(md.date))}</span>` : '尚未簽約';
+  const list = [...D.docs].sort((a, b) => String(a.date).localeCompare(String(b.date)) || String(a.createdAt).localeCompare(String(b.createdAt)));
+  $('#docList').innerHTML = list.length ? list.map(d => {
+    const imgs = (d.files || []).filter(f => String(f.mime).startsWith('image/')), pdfs = (d.files || []).filter(f => f.mime === 'application/pdf');
+    return `<div class="card docc"><div class="dh"><span class="dt ${isMainDoc(d) ? 'main' : ''}">${esc(d.type)}</span><span class="muted small">${esc(roc(d.date))}</span></div>
+      <h4>${esc(d.title)}</h4>
+      ${imgs.length ? `<div class="grid">${imgs.map((f, i) => `<div class="ph"><a href="${img(f.id, 2400)}" target="_blank" rel="noopener"><img src="${img(f.id, 700)}" loading="lazy" alt="第${i + 1}頁"></a><div class="t">第 ${i + 1} 頁</div></div>`).join('')}</div>` : ''}
+      ${pdfs.map(f => `<a class="btn ghost block" style="margin-top:8px" href="https://drive.google.com/file/d/${encodeURIComponent(f.id)}/view" target="_blank" rel="noopener">開啟 PDF：${esc(f.name || '文件')}</a>`).join('')}
+      ${!(d.files || []).length ? '<div class="small muted">（尚無檔案）</div>' : ''}
+      ${ADMIN ? `<button class="link" data-dd="${esc(d.id)}">刪除此文件</button>` : ''}</div>`;
+  }).join('') : '<div class="empty">合約以紙本簽署，簽署完成後會將掃描檔上傳於此備查</div>';
+  $$('#docList [data-dd]').forEach(b => b.onclick = () => act('deleteDoc', { id: b.dataset.dd }, '刪除此文件及所有檔案？'));
+}
+$('#docForm').onsubmit = async e => {
+  e.preventDefault(); const f = e.target; const files = [...f.files.files]; if (!files.length) return alert('請選擇檔案');
+  try {
+    busy(true, '建立文件…'); const r = await apiPost({ action: 'addDoc', caseId: ID, type: f.type.value, title: f.title.value.trim(), date: f.date.value });
+    let i = 0; for (const file of files) { i++; busy(true, `上傳 ${i}/${files.length}…`); await apiPost({ action: 'uploadDocFile', docId: r.id, name: file.name, data: await fileData(file) }); }
+    f.title.value = ''; f.files.value = ''; await load();
+  } catch (err) { alert('上傳失敗：' + err.message); }
+  busy(false);
+};
+
+/* ---------- 工期 ---------- */
+function renderFields() {
+  const fl = D.state.fields || {};
+  $('#kDatesBox').style.display = fl.startDate || fl.endDate ? 'block' : 'none';
+  $('#kDates').innerHTML = `${esc(rocS(fl.startDate) || '未定')} ～ ${esc(rocS(fl.endDate) || '未定')}`;
+  const fm = $('#fieldsForm'); fm.startDate.value = fl.startDate || ''; fm.endDate.value = fl.endDate || '';
+}
+$('#fieldsForm').onsubmit = e => { e.preventDefault(); const f = e.target; saveState({ fields: { ...(D.state.fields || {}), startDate: f.startDate.value, endDate: f.endDate.value } }); };
+
+/* ---------- 階段與付款 ---------- */
+function renderStages() {
+  const S = summarize(D.cfg, D.state, D.docs), checks = D.state.checks || {};
+  const T = S.tot;
+  $('#kTotalK').textContent = `合約總價（含${+(T.rate * 100).toFixed(2)}%營業稅）`;
+  $('#kTotal').innerHTML = T.all ? `${money(T.all)}<span class="sub">未稅 ${money(T.net)}＋營業稅 ${money(T.tax)}</span>` : '<span class="small muted">尚未設定</span>';
+  $('#stages').innerHTML = S.stages.length ? S.stages.map((s, i) => `<div class="stg" data-s="${S.stg(s.k)}"><div class="num">${S.stg(s.k) === '已完成' ? '✓' : i + 1}</div>
+    <div><div><span class="t">${esc(s.n)}</span><span class="s">${S.stg(s.k)}</span></div><div class="d">${esc(s.d)}</div>
+    ${(s.checks || []).map(c => { const v = checks[c]; return `<div class="chk"><span class="dot ${v ? 'pass' : ''}"></span><span>${esc(c)}${v ? `<span class="muted small">　${esc(roc(v.date))}合格</span>` : ''}</span></div>`; }).join('')}</div></div>`).join('')
+    : '<div class="small muted">尚未設定施工階段</div>';
+  $('#kStage').textContent = S.curLabel;
+
+  const line = (i, key, nm, amt, dt) => `<label class="ln ${dt ? 'got' : ''}"><input type="checkbox" data-pk="${i}|${key}" ${dt ? 'checked' : ''} ${ADMIN ? '' : 'disabled'}>
+      <span class="nm">${nm}${dt ? `<span class="dt">已收 ${esc(roc(dt))}</span>` : ''}</span><span class="m">${money(amt)}</span></label>`;
+  $('#pays').innerHTML = S.plan.length ? `<div class="paysum"><span>已收款 <b>${money(S.got)}</b></span><span class="muted">未收 <b>${money(S.total - S.got)}</b></span></div>` +
+    S.plan.map((p, i) => {
+      const r = paidOf(D.state, i), all = r.net && r.tax, any = r.net || r.tax;
+      const st = all ? '<span class="pill done">已收款</span>' : any ? `<span class="pill part">部分收款・${r.net ? '稅金' : '未稅'}未收</span>` : S.ready(p) ? '<span class="pill go">可請款</span>' : '<span class="pill">未達條件</span>';
+      return `<div class="payi"><div class="hd"><div><b>${esc(p.p)}</b>　<span class="muted small">${+p.pct || 0}%</span><div class="c">${esc(p.c)}</div>${st}</div>
+        <div class="a">${money(p.net + p.tax)}<div class="muted small" style="font-weight:400">含稅</div></div></div>
+        <div class="lines">${line(i, 'net', '未稅金額', p.net, r.net)}${line(i, 'tax', `營業稅 ${+(T.rate * 100).toFixed(2)}%`, p.tax, r.tax)}</div></div>`;
+    }).join('') + (ADMIN ? '<p class="small muted" style="margin:8px 0 0">勾選即標記收款，日期自動為今天；取消勾選會清除該筆收款日期。</p>' : '')
+    : '<div class="small muted">尚未設定付款期程</div>';
+  $$('#pays [data-pk]').forEach(cb => cb.onchange = () => {
+    const [i, key] = cb.dataset.pk.split('|'); const paid = { ...(D.state.paid || {}) }; const r = { ...paidOf(D.state, i) };
+    if (cb.checked) r[key] = today();
+    else { if (!confirm(`取消${S.plan[i].p}「${key === 'net' ? '未稅金額' : '營業稅'}」收款紀錄？`)) { cb.checked = true; return; } delete r[key]; }
+    if (r.net || r.tax) paid[i] = r; else delete paid[i]; saveState({ paid });
+  });
+
+  if (ADMIN) {
+    $('#statusEditor').innerHTML = S.stages.map(s => `<div class="stedit"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>${esc(s.n)}</b>
+      <select data-st="${esc(s.k)}">${['未開始', '施工中', '已完成'].map(v => `<option ${S.stg(s.k) === v ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+      <div class="chips">${(s.checks || []).map(c => `<button class="btn sm ${checks[c] ? '' : 'ghost'}" data-ck="${esc(c)}">${checks[c] ? '✓ ' : ''}${esc(c)}</button>`).join('')}</div></div>`).join('') +
+      '<p class="small muted" style="margin:8px 0 0">點驗收點可標記／取消合格，日期自動為今天。階段、驗收點、付款期請到總網頁「設定」修改。</p>';
+    $$('#statusEditor [data-st]').forEach(sel => sel.onchange = () => saveState({ stages: { ...(D.state.stages || {}), [sel.dataset.st]: sel.value } }));
+    $$('#statusEditor [data-ck]').forEach(b => b.onclick = () => {
+      const c = { ...(D.state.checks || {}) }; const n = b.dataset.ck;
+      if (c[n]) { if (!confirm(`取消「${n}」合格紀錄？`)) return; delete c[n]; } else c[n] = { date: today() };
+      saveState({ checks: c });
+    });
+  }
+}
+async function saveState(patch) {
+  busy(true, '儲存中…');
+  try { const r = await apiPost({ action: 'saveState', caseId: ID, state: patch }); D.state = { stages: {}, checks: {}, paid: {}, fields: {}, ...r.state }; renderStages(); renderFields(); }
+  catch (err) { alert('儲存失敗：' + err.message); renderStages(); }
+  busy(false);
+}
+
+/* ---------- 照片 ---------- */
+async function uploadAll(files, meta) {
+  const ids = []; let i = 0;
+  for (const f of files) { i++; busy(true, `上傳照片 ${i}/${files.length}…`); const data = await shrink(f, meta.cat === 'plan' ? 2400 : 1600); const r = await apiPost({ action: 'uploadPhoto', caseId: ID, data, ...meta }); ids.push(r.id); }
+  return ids;
+}
+function phHtml(p) {
+  return `<div class="ph"><a href="${img(p.fileId, 2400)}" target="_blank" rel="noopener"><img src="${img(p.fileId, 700)}" alt="${esc(p.caption || p.area)}" loading="lazy"></a>
+  ${p.caption ? `<div class="t">${esc(p.caption)}</div>` : ''}${ADMIN ? `<button class="x" data-dp="${esc(p.id)}">刪除</button>` : ''}</div>`;
+}
+const areas = () => { const a = (D.cfg.areas || []).filter(Boolean); return a.length ? a : ['全區', '其他']; };
+function byArea(list) { const known = areas(); const extra = [...new Set(list.map(p => p.area).filter(a => !known.includes(a)))]; return [...known, ...extra]; }
+function bindDel(box, msg) { $$('[data-dp]', box).forEach(b => b.onclick = e => { e.preventDefault(); act('deletePhoto', { id: b.dataset.dp }, msg); }); }
+function renderBefore() {
+  const list = D.photos.filter(p => p.cat === 'before');
+  $('#beforeList').innerHTML = list.length ? byArea(list).map(a => { const ps = list.filter(p => p.area === a); return ps.length ? `<div class="floorhd">${esc(a || '未分類')}　<span class="muted small">${ps.length} 張</span></div><div class="grid">${ps.map(phHtml).join('')}</div>` : ''; }).join('') : '<div class="empty">尚未上傳施工前照片</div>';
+  bindDel($('#beforeList'), '刪除這張照片？');
+}
+function renderPlans() {
+  const list = D.photos.filter(p => p.cat === 'plan'); const order = byArea(list);
+  list.sort((a, b) => order.indexOf(a.area) - order.indexOf(b.area) || String(a.createdAt).localeCompare(String(b.createdAt)));
+  $('#planList').innerHTML = list.length ? list.map(p => `<a class="plan" href="${img(p.fileId, 3000)}" target="_blank" rel="noopener"><img src="${img(p.fileId, 1400)}" alt="${esc(p.area)}平面圖" loading="lazy">
+    <div class="cap"><b>${esc(p.area || '平面圖')}</b><span class="small muted">${esc(p.caption || '')}</span></div>${ADMIN ? `<button class="x" data-dp="${esc(p.id)}">刪除</button>` : ''}</a>`).join('') : '<div class="empty">尚未上傳平面圖</div>';
+  bindDel($('#planList'), '刪除這張平面圖？');
+}
+function renderPolicy() {
+  const ps = D.photos.filter(p => p.cat === 'policy');
+  $('#policyList').innerHTML = ps.length ? `<div class="grid">${ps.map(phHtml).join('')}</div>` : '<div class="empty" style="padding:16px">尚未上傳保險單</div>';
+  bindDel($('#policyList'), '刪除這張保單照片？');
+}
+const photoForm = (sel, cat, need) => $(sel).onsubmit = async e => {
+  e.preventDefault(); const f = e.target; const files = [...f.files.files]; if (!files.length) return alert(need);
+  try { await uploadAll(files, { cat, area: f.area ? f.area.value : '', caption: f.caption ? f.caption.value.trim() : (cat === 'policy' ? '保險單' : '') }); f.files.value = ''; if (f.caption) f.caption.value = ''; await load(); }
+  catch (err) { alert('上傳失敗：' + err.message); }
+  busy(false);
+};
+photoForm('#beforeForm', 'before', '請選擇照片'); photoForm('#planForm', 'plan', '請選擇平面圖'); photoForm('#policyForm', 'policy', '請選擇保單照片');
+
+/* ---------- 施工紀錄 ---------- */
+$('#updForm').onsubmit = async e => {
+  e.preventDefault(); const f = e.target; const files = [...f.files.files];
+  try {
+    const ids = files.length ? await uploadAll(files, { cat: 'update', area: '', caption: f.title.value.trim() }) : [];
+    busy(true, '發布中…'); await apiPost({ action: 'addUpdate', caseId: ID, date: f.date.value, stage: f.stage.value, title: f.title.value.trim(), note: f.note.value.trim(), photoIds: ids });
+    f.title.value = ''; f.note.value = ''; f.files.value = ''; await load();
+  } catch (err) { alert('發布失敗：' + err.message); }
+  busy(false);
+};
+function evHtml(u) {
+  const ps = (u.photoIds || []).map(id => D.photos.find(p => p.id === id)).filter(Boolean);
+  return `<div class="ev"><div class="d">${esc(roc(u.date))}<span class="tag">${esc(String(u.stage || '').split('｜')[0])}</span></div>
+    <h4>${esc(u.title)}</h4>${u.note ? `<p>${esc(u.note)}</p>` : ''}${ps.length ? `<div class="grid">${ps.map(p => `<div class="ph"><a href="${img(p.fileId, 2400)}" target="_blank" rel="noopener"><img src="${img(p.fileId, 700)}" loading="lazy" alt=""></a></div>`).join('')}</div>` : ''}
+    ${ADMIN ? `<button class="link" data-du="${esc(u.id)}">刪除此紀錄</button>` : ''}</div>`;
+}
+function renderUpdates() {
+  const list = [...D.updates].sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.createdAt).localeCompare(String(a.createdAt)));
+  $('#timeline').innerHTML = list.length ? list.map(evHtml).join('') : '<div class="empty">尚無施工紀錄</div>';
+  $('#latest').innerHTML = list.length ? list.slice(0, 2).map(evHtml).join('') + '<button class="btn ghost block" onclick="go(\'progress\')">查看全部紀錄</button>' : '<div class="empty">開工後會在這裡公布施工紀錄與照片</div>';
+  $$('[data-du]').forEach(b => b.onclick = () => act('deleteUpdate', { id: b.dataset.du }, '刪除這筆施工紀錄（含照片）？'));
+}
+
+/* ---------- 管理 ---------- */
+async function act(action, data, ask) { if (ask && !confirm(ask)) return; busy(true, '處理中…'); try { await apiPost({ action, ...data }); await load(); } catch (err) { alert('失敗：' + err.message); } busy(false); }
+$('#admBtn').onclick = async () => {
+  if (ADMIN) { if (confirm('登出管理模式？')) { setPass(''); setAdmin(false); await load(); } return; }
+  const p = prompt('請輸入平安住管理密碼'); if (!p) return; setPass(p.trim()); busy(true, '驗證中…');
+  try { await apiPost({ action: 'checkAdmin' }); setAdmin(true); await load(); }
+  catch (err) { setPass(''); alert('登入失敗：' + err.message); }
+  busy(false);
+};
+function setAdmin(on) { ADMIN = on; document.body.classList.toggle('admin', on); $('#admBtn').textContent = on ? '登出管理模式' : '平安住登入'; }
+
+/* ---------- 讀取 ---------- */
+const fillSel = (el, arr) => el.innerHTML = arr.map(v => `<option>${esc(v)}</option>`).join('');
+function renderAll() {
+  const c = D.case;
+  document.title = `${c.name}｜平安住`; $('#caseName').textContent = c.name; $('#caseAddr').textContent = c.address || '';
+  fillSel($('#beforeForm [name=area]'), areas()); fillSel($('#planForm [name=area]'), areas());
+  const cur = $('#updForm [name=stage]').value;
+  fillSel($('#updForm [name=stage]'), (D.cfg.stages || []).map(s => s.n + (s.d ? '｜' + s.d : '')).concat(['其他']));
+  if (cur) $('#updForm [name=stage]').value = cur;
+  renderFields(); renderDocs(); renderStages(); renderBefore(); renderPlans(); renderPolicy(); renderUpdates();
+}
+async function load() {
+  const j = await apiGet({ action: 'case', id: ID });
+  if (j.redirect) { location.replace(j.redirect); return; }
+  D.case = j.case; D.cfg = j.case.config || {};
+  D.state = { stages: {}, checks: {}, paid: {}, fields: {}, ...(j.case.state || {}) };
+  D.docs = j.docs || []; D.photos = j.photos || []; D.updates = j.updates || [];
+  if (PASS && !j.admin) { setPass(''); setAdmin(false); } else if (j.admin && !ADMIN) setAdmin(true);
+  renderAll();
+}
+function fail(msg) {
+  $('#caseName').textContent = '找不到案場'; $('#pages').style.display = 'none'; $('#nav').style.display = 'none';
+  const g = $('#gone'); g.style.display = 'block'; g.textContent = msg;
+}
+$('#updForm [name=date]').value = today();
+if (!ID) fail('網址缺少案場代號，請使用平安住提供的完整連結。');
+else if (!configured()) fail('系統尚未完成設定。');
+else { busy(true, '讀取中…'); load().catch(err => /找不到/.test(err.message) ? fail(err.message) : (($('#sysNote').style.display = 'block'), ($('#sysNote').textContent = '資料讀取失敗：' + err.message))).finally(() => busy(false)); }
+</script>
+</body>
+</html>

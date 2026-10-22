@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E2833">
+<meta name="robots" content="noindex,nofollow">
+<title>專案管理總覽｜平安住</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+.wrap.wide{max-width:1040px}
+header.top .row{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+header.top nav{display:flex;gap:14px;font-size:14px}
+header.top nav a,header.top nav button{color:#F6F2EA;opacity:.85;background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+main{padding:18px 0 40px}
+@media (min-width:760px){.kpis.k4{grid-template-columns:repeat(4,1fr)}}
+
+.readyc{border-left:4px solid var(--accent)}
+.readyc .ri{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
+.readyc .ri:last-child{border-bottom:0;padding-bottom:0}
+.readyc .ri .m{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.chips{display:flex;gap:6px;flex:1 1 100%;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:4px 14px;font-size:14px;cursor:pointer;min-height:36px;white-space:nowrap;flex:none}
+.toolbar .btn{flex:1}
+@media (min-width:760px){.chips{flex:1 1 auto}.toolbar .btn{flex:none}}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+
+.cases{display:grid;gap:12px}
+@media (min-width:760px){.cases{grid-template-columns:1fr 1fr}}
+.case{margin:0;display:flex;flex-direction:column;gap:10px}
+.case .ch{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.case .cn{font-family:var(--serif);font-weight:900;font-size:20px;line-height:1.35;color:var(--ink);text-decoration:none}
+.case .cn:hover{text-decoration:underline}
+.case .addr{font-size:14px;color:var(--muted);line-height:1.4;margin-top:2px}
+.segs{display:flex;gap:4px}
+.segs i{flex:1;height:8px;border-radius:4px;background:var(--line)}
+.segs i.on{background:var(--accent)} .segs i.ok{background:var(--ok)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:14px;line-height:1.6;margin:0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar b{display:block;height:100%;background:var(--ok)}
+.alert{font-size:14px;color:var(--accent);font-weight:700;line-height:1.5}
+.case .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.case .err{font-size:14px;color:var(--warn)}
+
+/* editor */
+.sec{border-top:1px solid var(--line);margin-top:18px;padding-top:14px}
+.sec h4{font-family:var(--serif);font-size:17px;margin:0 0 4px}
+.two{display:grid;gap:12px}
+@media (min-width:560px){.two{grid-template-columns:1fr 1fr}}
+.lrow{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--paper);display:grid;gap:8px;margin-bottom:8px}
+.lrow .lh{display:flex;justify-content:space-between;align-items:center;gap:6px;font-size:14px;color:var(--muted)}
+.lrow .lh .ops{display:flex;gap:2px}
+.lrow .lh button{background:none;border:1px solid var(--line);border-radius:6px;min-width:34px;min-height:32px;cursor:pointer;color:var(--muted)}
+.lrow input{padding:9px 10px;font-size:16px;background:var(--card)}
+.needs{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:14px}
+.needs label{display:flex;align-items:center;gap:6px;color:var(--ink);font-size:14px}
+.needs input{width:18px;height:18px;padding:0;margin:0;accent-color:var(--accent)}
+.amtline{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sumline{font-size:14px;font-weight:700}
+.sumline.bad{color:var(--warn)}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg label{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;cursor:pointer;color:var(--ink);font-size:15px;background:var(--card)}
+.seg label:has(input:checked){background:var(--ink);color:var(--paper)}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap wide">
+    <div class="row">
+      <div>
+        <div class="firm">平安住股份有限公司</div>
+        <h1>專案管理總覽</h1>
+      </div>
+      <nav id="topnav" style="display:none">
+        <a href="https://yuengshih-work.github.io/head/" target="_blank" rel="noopener">記帳系統 ↗</a>
+        <button id="logout">登出</button>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main class="wrap wide">
+  <div id="sysNote" class="note" style="display:none"></div>
+
+  <div id="login" class="card" style="display:none;max-width:420px;margin:30px auto">
+    <h2>平安住登入</h2>
+    <p class="lead">專案管理總覽僅供平安住內部使用，請輸入管理密碼。</p>
+    <form class="f" id="loginForm">
+      <label>管理密碼<input type="password" name="p" autocomplete="current-password" required></label>
+      <button class="btn acc block" type="submit">登入</button>
+    </form>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="kpis k4">
+      <div class="kpi"><div class="k">進行中案場</div><div class="v" id="kActive">—</div></div>
+      <div class="kpi"><div class="k">可請款</div><div class="v" id="kReady">—</div></div>
+      <div class="kpi"><div class="k">已收款（未結案）</div><div class="v" id="kGot">—</div></div>
+      <div class="kpi"><div class="k">未收款（未結案）</div><div class="v" id="kLeft">—</div></div>
+    </div>
+
+    <div class="card readyc" id="readyBox" style="display:none">
+      <b>可以請款了</b>
+      <div id="readyList"></div>
+    </div>
+
+    <div class="toolbar" style="margin-top:18px">
+      <div class="chips" id="filters"></div>
+      <button class="btn ghost sm" id="reload">重新整理</button>
+      <button class="btn acc sm" id="addCase">＋ 新增案場</button>
+    </div>
+    <div class="cases" id="cases"></div>
+  </div>
+
+  <footer>平安住股份有限公司・統編 90052437・07-9623551 分機555</footer>
+</main>
+
+<dialog class="dlg" id="dlg">
+  <form id="caseForm" method="dialog" novalidate>
+    <div class="dh"><b id="dlgTitle">新增案場</b><button type="button" class="x-close" data-close aria-label="關閉">×</button></div>
+    <div class="db f" id="dlgBody"></div>
+    <div class="df">
+      <button type="button" class="btn ghost sm" id="delCase" style="margin-right:auto;display:none">刪除案場</button>
+      <button type="button" class="btn ghost" data-close>取消</button>
+      <button type="submit" class="btn acc">儲存</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="spin" id="spin"><div id="spinTxt">處理中…</div></div>
+
+<script src="assets/common.js"></script>
+<script>
+let CASES = [];            // 後端回傳的案場（含外部頁讀到的即時狀態）
+let FILTER = '未結案';
+const EXT = {};            // 外部獨立頁讀取結果 {state, docs, latest, err}
+
+/* ---------- 登入 ---------- */
+function showLogin(msg) {
+  $('#login').style.display = 'block'; $('#app').style.display = 'none'; $('#topnav').style.display = 'none';
+  if (msg) { const n = $('#sysNote'); n.style.display = 'block'; n.textContent = msg; }
+}
+$('#loginForm').onsubmit = async e => {
+  e.preventDefault(); const p = e.target.p.value.trim(); if (!p) return;
+  setPass(p); busy(true, '驗證中…');
+  try { await apiPost({ action: 'checkAdmin' }); e.target.p.value = ''; $('#sysNote').style.display = 'none'; await load(); }
+  catch (err) { setPass(''); alert('登入失敗：' + err.message); }
+  busy(false);
+};
+$('#logout').onclick = () => { if (!confirm('登出平安住管理模式？')) return; setPass(''); CASES = []; showLogin(); };
+
+/* ---------- 讀取 ---------- */
+async function load() {
+  busy(true, '讀取案場…');
+  try {
+    const j = await apiGet({ action: 'hub' });
+    CASES = (j.cases || []).sort((a, b) => (+a.sort || 999) - (+b.sort || 999) || String(a.name).localeCompare(String(b.name), 'zh-Hant'));
+    $('#login').style.display = 'none'; $('#app').style.display = 'block'; $('#topnav').style.display = 'flex';
+    render();
+    CASES.filter(c => c.kind === 'external' && c.api).forEach(loadExt);
+  } catch (err) {
+    if (/密碼/.test(err.message)) { setPass(''); showLogin('密碼已變更或失效，請重新登入。'); }
+    else { const n = $('#sysNote'); n.style.display = 'block'; n.textContent = '讀取失敗：' + err.message; if (!PASS) showLogin(); }
+  }
+  busy(false);
+}
+async function loadExt(c) {
+  EXT[c.id] = { loading: true }; renderCard(c);
+  try {
+    const j = await fetchJ(c.api + (c.api.includes('?') ? '&' : '?') + 'action=all', {}, 30000);
+    const ups = (j.updates || []).sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.createdAt).localeCompare(String(a.createdAt)));
+    EXT[c.id] = { state: { stages: {}, checks: {}, paid: {}, ...(j.status || {}) }, docs: j.docs || [], latest: ups[0] ? { date: ups[0].date, title: ups[0].title } : null, updateCount: ups.length };
+  } catch (err) { EXT[c.id] = { err: err.message }; }
+  render();
+}
+
+/* ---------- 計算 ---------- */
+function view(c) {
+  const ext = c.kind === 'external' ? (EXT[c.id] || {}) : null;
+  const state = ext ? (ext.state || {}) : (c.state || {});
+  const docs = ext ? (ext.docs || []) : (c.docs || []);
+  const s = summarize(c.config, state, docs);
+  return { ...s, latest: ext ? ext.latest : c.latest, loading: ext && (ext.loading || (!ext.state && !ext.err)), err: ext && ext.err };
+}
+const open = c => c.status !== '已結案';
+
+/* ---------- 畫面 ---------- */
+function render() {
+  const groups = ['未結案', ...STATUS_LIST, '全部'];
+  const cnt = g => CASES.filter(c => g === '全部' ? true : g === '未結案' ? open(c) : c.status === g).length;
+  $('#filters').innerHTML = groups.map(g => `<button class="chip" data-f="${g}" aria-pressed="${FILTER === g}">${g}　${cnt(g)}</button>`).join('');
+  $$('#filters .chip').forEach(b => b.onclick = () => { FILTER = b.dataset.f; render(); });
+
+  let got = 0, left = 0, readyAmt = 0; const ready = [];
+  CASES.filter(open).forEach(c => {
+    const v = view(c); if (v.loading || v.err) return;
+    got += v.got; left += v.total - v.got;
+    v.readyList.forEach(r => { readyAmt += r.amt; ready.push({ c, ...r }); });
+  });
+  $('#kActive').textContent = CASES.filter(c => c.status === '施工中').length + ' 案';
+  $('#kReady').innerHTML = ready.length ? `${money(readyAmt)}<span class="sub">${ready.length} 筆</span>` : '無';
+  $('#kGot').textContent = money(got); $('#kLeft').textContent = money(left);
+  $('#readyBox').style.display = ready.length ? 'block' : 'none';
+  $('#readyList').innerHTML = ready.map(r => `<div class="ri"><div><b>${esc(r.c.name)}</b>　${esc(r.p)}${r.part ? '<span class="pill part" style="margin-left:6px">部分已收</span>' : ''}</div>
+    <div style="display:flex;align-items:center;gap:10px"><span class="m">${money(r.amt)}</span><a class="btn ghost sm" href="${esc(caseUrl(r.c))}" target="_blank" rel="noopener">開啟</a></div></div>`).join('');
+
+  const list = CASES.filter(c => FILTER === '全部' ? true : FILTER === '未結案' ? open(c) : c.status === FILTER);
+  $('#cases').innerHTML = list.length ? list.map(c => `<div class="card case" id="c-${esc(c.id)}"></div>`).join('')
+    : `<div class="empty" style="grid-column:1/-1">${CASES.length ? '這個分類沒有案場' : '還沒有案場，按「＋ 新增案場」開始'}</div>`;
+  list.forEach(renderCard);
+}
+
+function renderCard(c) {
+  const el = document.getElementById('c-' + c.id); if (!el) return;
+  const v = view(c), url = caseUrl(c);
+  const segs = v.stages.map(s => { const x = v.stg(s.k); return `<i class="${x === '已完成' ? 'ok' : x === '施工中' ? 'on' : ''}" title="${esc(s.n)}：${x}"></i>`; }).join('');
+  const pct = v.total ? Math.round(v.got / v.total * 100) : 0;
+  let body;
+  if (v.loading) body = '<div class="small muted">讀取案場頁資料中…</div>';
+  else if (v.err) body = `<div class="err">無法讀取案場頁資料：${esc(v.err)}</div>`;
+  else body = `
+    ${v.stages.length ? `<div class="segs">${segs}</div>` : ''}
+    <dl class="kv">
+      <dt>進度</dt><dd>${esc(v.curLabel)}（${v.done}/${v.stages.length} 階段）</dd>
+      <dt>合約</dt><dd>${v.signed ? '已簽約 ' + esc(rocS(v.signed.date)) : '尚未簽約'}　${money(v.total)}</dd>
+      <dt>收款</dt><dd>${money(v.got)}（${pct}%）</dd>
+    </dl>
+    <div class="bar"><b style="width:${pct}%"></b></div>
+    ${v.readyList.length ? `<div class="alert">可請款：${v.readyList.map(r => esc(r.p) + ' ' + money(r.amt)).join('、')}</div>` : ''}
+    <div class="small"><span class="muted">最新紀錄　</span>${v.latest ? esc(rocS(v.latest.date)) + '　' + esc(v.latest.title) : '<span class="muted">尚無</span>'}</div>`;
+  el.innerHTML = `
+    <div class="ch"><div>
+      <a class="cn" href="${esc(url)}" target="_blank" rel="noopener">${esc(c.name)}</a>
+      <div class="addr">${esc(c.address || '')}</div></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <span class="pill ${c.status === '施工中' ? 'go' : c.status === '已完工' ? 'done' : ''}">${esc(c.status)}</span>
+        ${c.kind === 'external' ? '<span class="pill blue">獨立頁</span>' : ''}</div></div>
+    ${body}
+    <div class="acts">
+      <a class="btn sm" href="${esc(url)}" target="_blank" rel="noopener">開啟案場頁</a>
+      <button class="btn ghost sm" data-copy="${esc(url)}">複製連結</button>
+      <button class="btn ghost sm" data-edit="${esc(c.id)}">設定</button>
+    </div>`;
+  el.querySelector('[data-copy]').onclick = async e => { try { await navigator.clipboard.writeText(e.target.dataset.copy); e.target.textContent = '已複製'; setTimeout(() => e.target.textContent = '複製連結', 1500); } catch (_) { prompt('複製這個連結', e.target.dataset.copy); } };
+  el.querySelector('[data-edit]').onclick = () => editCase(c);
+}
+
+$('#reload').onclick = load;
+$('#addCase').onclick = () => editCase(null);
+
+/* ---------- 案場設定編輯 ---------- */
+const LONGDE_TPL = () => ({
+  netTotal: 0, taxRate: 0.05, areas: ['1F', '2F', '3F', '外牆', '其他'],
+  stages: [
+    { n: '第一階段', d: '拆除清運、臨時水電', checks: ['拆除完成查驗'] },
+    { n: '第二階段', d: '水電、管線', checks: ['水電隱蔽前查驗'] },
+    { n: '第三階段', d: '土水、防水、廁所', checks: ['防水層隱蔽前查驗', '廁所完成查驗'] },
+    { n: '第四階段', d: '收尾、總驗收', checks: ['總驗收'] }],
+  pays: [
+    { p: '第一期', c: '簽約時', pct: 30, need: [SIGN] },
+    { p: '第二期', c: '水電隱蔽前查驗合格', pct: 30, need: ['水電隱蔽前查驗'] },
+    { p: '第三期', c: '廁所完成查驗合格', pct: 30, need: ['廁所完成查驗'] },
+    { p: '第四期・尾款', c: '總驗收完成，結算追加減', pct: 10, need: ['總驗收'] }]
+});
+const clone = o => JSON.parse(JSON.stringify(o));
+const splitList = s => String(s || '').split(/[、,，\n]+/).map(x => x.trim()).filter(Boolean);
+const newKey = () => 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+let EDIT = null;
+
+function editCase(c) {
+  const isNew = !c;
+  EDIT = isNew ? { isNew: true, id: '', name: '', address: '', status: '準備中', kind: 'template', url: '', api: '', sort: CASES.length + 1, config: LONGDE_TPL() }
+               : { ...clone(c), isNew: false, config: { netTotal: 0, taxRate: 0.05, areas: [], stages: [], pays: [], ...clone(c.config || {}) } };
+  EDIT.config.stages.forEach(s => s.k = s.k || newKey());
+  $('#dlgTitle').textContent = isNew ? '新增案場' : '案場設定';
+  $('#delCase').style.display = isNew ? 'none' : 'inline-flex';
+  drawEditor();
+  $('#dlg').showModal(); $('#dlg .db').scrollTop = 0;
+}
+
+function drawEditor() {
+  const E = EDIT, cf = E.config;
+  const otherCases = CASES.filter(x => x.id !== E.id);
+  $('#dlgBody').innerHTML = `
+    ${E.isNew && otherCases.length ? `<label>從現有案場複製階段與付款設定（選填）<select id="copyFrom"><option value="">— 使用預設範本 —</option>${otherCases.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('')}</select></label>` : ''}
+    <label>案場名稱 *<input name="name" value="${esc(E.name)}" placeholder="例：明誠路透天整修工程" required></label>
+    <label>案場代號 *（英文小寫、數字、-；會成為網址，建立後不能改）
+      <input name="id" value="${esc(E.id)}" ${E.isNew ? '' : 'disabled'} placeholder="例：mingcheng" autocapitalize="off" spellcheck="false">
+      <span class="hint" id="urlHint"></span></label>
+    <label>地址<input name="address" value="${esc(E.address)}" placeholder="例：高雄市鼓山區…"></label>
+    <div class="two">
+      <label>業主（選填，只在內部顯示）<input name="client" value="${esc(cf.client || '')}"></label>
+      <label>狀態<select name="status">${STATUS_LIST.map(s => `<option ${E.status === s ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
+    </div>
+    <label>頁面類型
+      <div class="seg">
+        <label><input type="radio" name="kind" value="template" ${E.kind !== 'external' ? 'checked' : ''}>共用範本頁</label>
+        <label><input type="radio" name="kind" value="external" ${E.kind === 'external' ? 'checked' : ''}>獨立頁（如龍德）</label>
+      </div></label>
+    <div id="extBox" class="f" style="display:${E.kind === 'external' ? 'grid' : 'none'}">
+      <label>獨立頁網址<input name="url" value="${esc(E.url)}" placeholder="https://yuengshih-work.github.io/longde/"></label>
+      <label>獨立頁後端網址（讀進度與收款用）<input name="api" value="${esc(E.api)}" placeholder="https://script.google.com/macros/s/…/exec"></label>
+      <div class="hint">獨立頁的階段與付款期以該頁程式為準，下方設定只用來在總網頁計算金額，請保持一致。</div>
+    </div>
+
+    <div class="sec"><h4>合約金額</h4>
+      <div class="two">
+        <label>未稅總價<input name="netTotal" inputmode="numeric" value="${cf.netTotal || ''}" placeholder="例：5522000"></label>
+        <label>營業稅率（%）<input name="taxRate" inputmode="decimal" value="${cf.taxRate == null ? 5 : +(cf.taxRate * 100).toFixed(2)}"></label>
+      </div>
+      <div class="amtline" id="totLine" style="margin-top:6px"></div>
+    </div>
+
+    <div class="sec"><h4>照片區域</h4>
+      <label>施工前照片、平面圖的分類，用「、」分隔<input name="areas" value="${esc((cf.areas || []).join('、'))}" placeholder="1F、2F、外牆、其他"></label>
+    </div>
+
+    <div class="sec"><h4>施工階段與驗收點</h4>
+      <div class="hint" style="margin-bottom:8px">驗收點用「、」分隔；付款條件會用到這些驗收點。</div>
+      <div id="stgRows"></div>
+      <button type="button" class="btn ghost sm" id="addStg">＋ 新增階段</button>
+    </div>
+
+    <div class="sec"><h4>付款期程</h4>
+      <div class="hint" style="margin-bottom:8px">勾選該期需要完成的條件，條件都達成時總網頁會提示「可請款」。比例合計 100% 時，尾差自動算進最後一期。</div>
+      <div id="payRows"></div>
+      <div class="sumline" id="pctSum"></div>
+      <button type="button" class="btn ghost sm" id="addPay" style="margin-top:8px">＋ 新增一期</button>
+    </div>
+    <label style="margin-top:12px">排序（數字小的排前面）<input name="sort" inputmode="numeric" value="${esc(E.sort || '')}"></label>`;
+
+  const B = $('#dlgBody');
+  const bindVal = (name, fn) => { const el = B.querySelector(`[name="${name}"]`); if (el) el.addEventListener('input', () => fn(el.value)); };
+  bindVal('name', v => E.name = v); bindVal('address', v => E.address = v); bindVal('client', v => cf.client = v);
+  bindVal('url', v => E.url = v); bindVal('api', v => E.api = v); bindVal('sort', v => E.sort = v);
+  bindVal('id', v => { E.id = v.trim().toLowerCase(); urlHint(); });
+  bindVal('areas', v => cf.areas = splitList(v));
+  bindVal('netTotal', v => { cf.netTotal = +String(v).replace(/[^\d.]/g, '') || 0; totLine(); drawPays(); });
+  bindVal('taxRate', v => { cf.taxRate = (+v || 0) / 100; totLine(); drawPays(); });
+  B.querySelector('[name=status]').onchange = e => E.status = e.target.value;
+  B.querySelectorAll('[name=kind]').forEach(r => r.onchange = () => { E.kind = r.value; $('#extBox').style.display = E.kind === 'external' ? 'grid' : 'none'; urlHint(); });
+  const cp = $('#copyFrom'); if (cp) cp.onchange = () => {
+    const src = CASES.find(x => x.id === cp.value); const base = src ? clone(src.config || {}) : LONGDE_TPL();
+    E.config = { ...base, client: cf.client || '', netTotal: cf.netTotal || 0 }; E.config.stages.forEach(s => s.k = newKey());
+    const v = cp.value; drawEditor(); $('#copyFrom').value = v;
+  };
+  $('#addStg').onclick = () => { cf.stages.push({ k: newKey(), n: `第${cf.stages.length + 1}階段`, d: '', checks: [] }); drawStages(); drawPays(); };
+  $('#addPay').onclick = () => { cf.pays.push({ p: `第${cf.pays.length + 1}期`, c: '', pct: 0, need: [] }); drawPays(); };
+  urlHint(); totLine(); drawStages(); drawPays();
+}
+function urlHint() {
+  const h = $('#urlHint'); if (!h) return;
+  h.textContent = EDIT.kind === 'external' ? '獨立頁使用上方「獨立頁網址」' : '案場頁網址：' + siteBase() + 'site/?id=' + (EDIT.id || '代號');
+}
+function totLine() { const t = contractTotal(EDIT.config); $('#totLine').textContent = `營業稅 ${money(t.tax)}　含稅總價 ${money(t.all)}`; }
+
+function rowHead(label, i, n, kind) {
+  return `<div class="lh"><span>${label}</span><span class="ops">
+    <button type="button" data-mv="${kind}|${i}|-1" ${i === 0 ? 'disabled' : ''} aria-label="上移">↑</button>
+    <button type="button" data-mv="${kind}|${i}|1" ${i === n - 1 ? 'disabled' : ''} aria-label="下移">↓</button>
+    <button type="button" data-rm="${kind}|${i}" aria-label="刪除">✕</button></span></div>`;
+}
+function bindRowOps(box) {
+  box.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => {
+    const [k, i, d] = b.dataset.mv.split('|'); const arr = EDIT.config[k]; const a = +i, t = a + +d;
+    [arr[a], arr[t]] = [arr[t], arr[a]]; drawStages(); drawPays(); });
+  box.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => {
+    const [k, i] = b.dataset.rm.split('|'); if (!confirm('刪除這一列？')) return; EDIT.config[k].splice(+i, 1); drawStages(); drawPays(); });
+}
+function drawStages() {
+  const st = EDIT.config.stages, box = $('#stgRows');
+  box.innerHTML = st.length ? st.map((s, i) => `<div class="lrow">${rowHead('階段 ' + (i + 1), i, st.length, 'stages')}
+      <input data-s="${i}|n" value="${esc(s.n)}" placeholder="階段名稱，例：第一階段">
+      <input data-s="${i}|d" value="${esc(s.d)}" placeholder="主要施工內容">
+      <input data-s="${i}|checks" value="${esc((s.checks || []).join('、'))}" placeholder="驗收點，例：拆除完成查驗、水電隱蔽前查驗"></div>`).join('')
+    : '<div class="hint" style="margin-bottom:8px">尚無階段</div>';
+  box.querySelectorAll('[data-s]').forEach(el => el.addEventListener('input', () => {
+    const [i, f] = el.dataset.s.split('|'); st[+i][f] = f === 'checks' ? splitList(el.value) : el.value;
+    if (f === 'checks') drawPays();
+  }));
+  bindRowOps(box);
+}
+function drawPays() {
+  const cf = EDIT.config, ps = cf.pays, box = $('#payRows'); if (!box) return;
+  const allChecks = [...new Set(cf.stages.flatMap(s => s.checks || []))];
+  const plan = payPlan(cf);
+  box.innerHTML = ps.length ? ps.map((p, i) => `<div class="lrow">${rowHead('付款 ' + (i + 1), i, ps.length, 'pays')}
+      <div class="two" style="grid-template-columns:1fr 110px">
+        <input data-p="${i}|p" value="${esc(p.p)}" placeholder="期別，例：第一期">
+        <input data-p="${i}|pct" value="${p.pct ?? ''}" inputmode="decimal" placeholder="比例 %"></div>
+      <input data-p="${i}|c" value="${esc(p.c)}" placeholder="付款條件說明，例：拆除完成查驗合格">
+      <div class="needs">${[SIGN, ...allChecks].map(n => `<label><input type="checkbox" data-n="${i}" value="${esc(n)}" ${(p.need || []).includes(n) ? 'checked' : ''}>${n === SIGN ? '主合約簽署' : esc(n)}</label>`).join('')}</div>
+      <div class="amtline" id="amt-${i}">${plan[i] ? `未稅 ${money(plan[i].net)}＋稅 ${money(plan[i].tax)}＝${money(plan[i].net + plan[i].tax)}` : ''}</div></div>`).join('')
+    : '<div class="hint" style="margin-bottom:8px">尚無付款期</div>';
+  box.querySelectorAll('[data-p]').forEach(el => el.addEventListener('input', () => {
+    const [i, f] = el.dataset.p.split('|'); ps[+i][f] = f === 'pct' ? (+el.value || 0) : el.value;
+    if (f === 'pct') { const pl = payPlan(cf); pl.forEach((x, j) => { const a = $('#amt-' + j); if (a) a.textContent = `未稅 ${money(x.net)}＋稅 ${money(x.tax)}＝${money(x.net + x.tax)}`; }); pctSum(); }
+  }));
+  box.querySelectorAll('[data-n]').forEach(el => el.onchange = () => {
+    const p = ps[+el.dataset.n]; p.need = p.need || [];
+    if (el.checked) { if (!p.need.includes(el.value)) p.need.push(el.value); } else p.need = p.need.filter(x => x !== el.value);
+  });
+  bindRowOps(box); pctSum();
+}
+function pctSum() {
+  const s = EDIT.config.pays.reduce((a, p) => a + (+p.pct || 0), 0), el = $('#pctSum');
+  el.textContent = `比例合計 ${+s.toFixed(2)}%` + (Math.abs(s - 100) < 0.001 ? '' : '（不是 100%）'); el.classList.toggle('bad', Math.abs(s - 100) >= 0.001);
+}
+
+$$('[data-close]').forEach(b => b.onclick = () => $('#dlg').close());
+$('#caseForm').onsubmit = async e => {
+  e.preventDefault(); const E = EDIT, cf = E.config;
+  if (!E.name.trim()) return alert('請填案場名稱');
+  if (!/^[a-z0-9][a-z0-9-]{1,30}$/.test(E.id)) return alert('案場代號只能用英文小寫、數字與 -，2～31 字');
+  if (E.kind === 'external' && !/^https?:\/\//.test(E.url)) return alert('請填獨立頁網址');
+  const checks = new Set(cf.stages.flatMap(s => s.checks || []));
+  const bad = cf.pays.flatMap(p => (p.need || []).filter(n => n !== SIGN && !checks.has(n)));
+  if (bad.length && !confirm(`付款條件中的「${[...new Set(bad)].join('、')}」已不在任何階段的驗收點，仍要儲存？`)) return;
+  const sum = cf.pays.reduce((a, p) => a + (+p.pct || 0), 0);
+  if (cf.pays.length && Math.abs(sum - 100) >= 0.001 && !confirm(`付款比例合計 ${sum}%，不是 100%，仍要儲存？`)) return;
+  busy(true, '儲存中…');
+  try {
+    await apiPost({ action: 'saveCase', case: { id: E.id, isNew: E.isNew, name: E.name, address: E.address, status: E.status, kind: E.kind, url: E.url, api: E.api, sort: E.sort, config: cf } });
+    $('#dlg').close(); await load();
+  } catch (err) { alert('儲存失敗：' + err.message); }
+  busy(false);
+};
+$('#delCase').onclick = async () => {
+  if (!confirm(`刪除案場「${EDIT.name}」？\n（已有照片、紀錄或文件的案場不能刪除，請改設為「已結案」）`)) return;
+  busy(true, '刪除中…');
+  try { await apiPost({ action: 'deleteCase', id: EDIT.id }); $('#dlg').close(); await load(); }
+  catch (err) { alert('刪除失敗：' + err.message); }
+  busy(false);
+};
+
+/* ---------- 啟動 ---------- */
+if (!configured()) { const n = $('#sysNote'); n.style.display = 'block'; n.textContent = '尚未設定後端網址：請把 Apps Script 部署網址貼到 assets/common.js 的 API。'; }
+else if (PASS) load(); else showLogin();
+</script>
+</body>
+</html>
