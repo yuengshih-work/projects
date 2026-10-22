@@ -1,7 +1,7 @@
 /* 平安住・專案管理系統 共用設定與工具（總網頁與各案場頁共用） */
 
 /* ======== 設定：貼上「專案管理系統」Apps Script 部署網址（/exec 結尾） ======== */
-const API = 'https://script.google.com/macros/s/請貼上部署網址/exec';
+const API = 'https://script.google.com/macros/s/AKfycbyeiF2_oGk3Ai7vl57RqsBAHKoFXyUlTV7L1tNoNWDRyJSqLU6MPjP8KcCqat1kMjI0Ww/exec';
 /* ========================================================================== */
 
 const FIRM = '平安住股份有限公司・統編 90052437・07-9623551 分機555';
