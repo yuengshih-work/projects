@@ -126,6 +126,27 @@ function handle_(b) {
       const row = { id: uid_(), caseId: b.caseId, date: b.date || '', stage: b.stage || '', title: b.title || '', note: b.note || '', photoIds: b.photoIds || [], createdAt: new Date().toISOString() };
       append_('updates', row); return { id: row.id };
     }
+    case 'editUpdate': {
+      const u = rows_('updates').find(r => r.id === b.id); if (!u) throw new Error('找不到紀錄');
+      const rm = b.removePhotoIds || [], ps = rows_('photos');
+      rm.forEach(pid => { const p = ps.find(x => x.id === pid); if (p) { trash_(p.fileId); deleteRow_('photos', 'id', pid); } });
+      const ids = (u.photoIds || []).filter(x => rm.indexOf(x) < 0).concat(b.addPhotoIds || []);
+      updateRow_('updates', 'id', b.id, { date: b.date || u.date, stage: b.stage == null ? u.stage : b.stage, title: b.title == null ? u.title : b.title, note: b.note == null ? u.note : b.note, photoIds: ids });
+      const di = SHEETS.updates.indexOf('date'); sh_('updates').getRange(findRow_('updates', 'id', b.id), di + 1).setNumberFormat('@').setValue(b.date || u.date);
+      return {};
+    }
+    case 'editPhoto': {
+      if (!rows_('photos').some(r => r.id === b.id)) throw new Error('找不到照片');
+      const patch = {}; if (b.area != null) patch.area = b.area; if (b.caption != null) patch.caption = b.caption;
+      updateRow_('photos', 'id', b.id, patch); return {};
+    }
+    case 'editDoc': {
+      const d = rows_('docs').find(r => r.id === b.id); if (!d) throw new Error('找不到文件');
+      const rm = b.removeFileIds || []; rm.forEach(trash_);
+      updateRow_('docs', 'id', b.id, { type: b.type || d.type, title: b.title == null ? d.title : b.title, date: b.date == null ? d.date : b.date, files: (d.files || []).filter(f => rm.indexOf(f.id) < 0) });
+      const di = SHEETS.docs.indexOf('date'); sh_('docs').getRange(findRow_('docs', 'id', b.id), di + 1).setNumberFormat('@').setValue(b.date == null ? d.date : b.date);
+      return {};
+    }
     case 'deleteUpdate': {
       const u = rows_('updates').find(r => r.id === b.id); if (!u) throw new Error('找不到紀錄');
       const ps = rows_('photos'); (u.photoIds || []).forEach(pid => { const p = ps.find(x => x.id === pid); if (p) { trash_(p.fileId); deleteRow_('photos', 'id', pid); } });

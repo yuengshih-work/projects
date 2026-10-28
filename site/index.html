@@ -28,6 +28,18 @@ body.admin .admtag{display:block}
 .stedit select{padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--paper)}
 .plan .x{position:absolute;top:14px;right:14px;background:rgba(0,0,0,.65);color:#fff;border:0;border-radius:6px;font-size:13px;padding:4px 8px;cursor:pointer}
 #gone{display:none}
+.ph .e,.plan .e{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.65);color:#fff;border:0;border-radius:6px;font-size:13px;padding:4px 8px;cursor:pointer}
+.plan .e{top:14px;left:14px}
+.rowlinks{display:flex;gap:16px}
+.eph{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.eph .t{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--paper)}
+.eph img{width:100%;aspect-ratio:1;object-fit:cover}
+.eph .pdf{aspect-ratio:1;display:flex;align-items:center;justify-content:center;padding:6px;font-size:12px;text-align:center;line-height:1.4;word-break:break-all}
+.eph button{position:absolute;left:4px;right:4px;bottom:4px;border:0;border-radius:6px;background:rgba(0,0,0,.65);color:#fff;font-size:12px;padding:4px 0;cursor:pointer}
+.eph .t.rm img,.eph .t.rm .pdf{opacity:.25}
+.eph .t.rm button{background:var(--accent)}
+.newprev{display:flex;flex-wrap:wrap;gap:6px}
+.newprev img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -162,6 +174,14 @@ body.admin .admtag{display:block}
   <button data-p="progress" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>進度</button>
 </nav>
 
+<dialog class="dlg" id="edlg">
+  <form id="edForm" novalidate>
+    <div class="dh"><b id="edTitle">編輯</b><button type="button" class="x-close" data-eclose aria-label="關閉">×</button></div>
+    <div class="db f" id="edBody"></div>
+    <div class="df"><button type="button" class="btn ghost" data-eclose>取消</button><button type="submit" class="btn acc">儲存</button></div>
+  </form>
+</dialog>
+
 <div class="spin" id="spin"><div id="spinTxt">處理中…</div></div>
 
 <script src="../assets/common.js"></script>
@@ -193,9 +213,10 @@ function renderDocs() {
       ${imgs.length ? `<div class="grid">${imgs.map((f, i) => `<div class="ph"><a href="${img(f.id, 2400)}" target="_blank" rel="noopener"><img src="${img(f.id, 700)}" loading="lazy" alt="第${i + 1}頁"></a><div class="t">第 ${i + 1} 頁</div></div>`).join('')}</div>` : ''}
       ${pdfs.map(f => `<a class="btn ghost block" style="margin-top:8px" href="https://drive.google.com/file/d/${encodeURIComponent(f.id)}/view" target="_blank" rel="noopener">開啟 PDF：${esc(f.name || '文件')}</a>`).join('')}
       ${!(d.files || []).length ? '<div class="small muted">（尚無檔案）</div>' : ''}
-      ${ADMIN ? `<button class="link" data-dd="${esc(d.id)}">刪除此文件</button>` : ''}</div>`;
+      ${ADMIN ? `<div class="rowlinks"><button class="link" data-ed="${esc(d.id)}">編輯／補上傳</button><button class="link" data-dd="${esc(d.id)}">刪除此文件</button></div>` : ''}</div>`;
   }).join('') : '<div class="empty">合約以紙本簽署，簽署完成後會將掃描檔上傳於此備查</div>';
   $$('#docList [data-dd]').forEach(b => b.onclick = () => act('deleteDoc', { id: b.dataset.dd }, '刪除此文件及所有檔案？'));
+  $$('#docList [data-ed]').forEach(b => b.onclick = () => editDoc(D.docs.find(d => d.id === b.dataset.ed)));
 }
 $('#docForm').onsubmit = async e => {
   e.preventDefault(); const f = e.target; const files = [...f.files.files]; if (!files.length) return alert('請選擇檔案');
@@ -274,11 +295,14 @@ async function uploadAll(files, meta) {
 }
 function phHtml(p) {
   return `<div class="ph"><a href="${img(p.fileId, 2400)}" target="_blank" rel="noopener"><img src="${img(p.fileId, 700)}" alt="${esc(p.caption || p.area)}" loading="lazy"></a>
-  ${p.caption ? `<div class="t">${esc(p.caption)}</div>` : ''}${ADMIN ? `<button class="x" data-dp="${esc(p.id)}">刪除</button>` : ''}</div>`;
+  ${p.caption ? `<div class="t">${esc(p.caption)}</div>` : ''}${ADMIN ? `<button class="e" data-ep="${esc(p.id)}">編輯</button><button class="x" data-dp="${esc(p.id)}">刪除</button>` : ''}</div>`;
 }
 const areas = () => { const a = (D.cfg.areas || []).filter(Boolean); return a.length ? a : ['全區', '其他']; };
 function byArea(list) { const known = areas(); const extra = [...new Set(list.map(p => p.area).filter(a => !known.includes(a)))]; return [...known, ...extra]; }
-function bindDel(box, msg) { $$('[data-dp]', box).forEach(b => b.onclick = e => { e.preventDefault(); act('deletePhoto', { id: b.dataset.dp }, msg); }); }
+function bindDel(box, msg) {
+  $$('[data-dp]', box).forEach(b => b.onclick = e => { e.preventDefault(); act('deletePhoto', { id: b.dataset.dp }, msg); });
+  $$('[data-ep]', box).forEach(b => b.onclick = e => { e.preventDefault(); editPhoto(D.photos.find(p => p.id === b.dataset.ep)); });
+}
 function renderBefore() {
   const list = D.photos.filter(p => p.cat === 'before');
   $('#beforeList').innerHTML = list.length ? byArea(list).map(a => { const ps = list.filter(p => p.area === a); return ps.length ? `<div class="floorhd">${esc(a || '未分類')}　<span class="muted small">${ps.length} 張</span></div><div class="grid">${ps.map(phHtml).join('')}</div>` : ''; }).join('') : '<div class="empty">尚未上傳施工前照片</div>';
@@ -288,7 +312,7 @@ function renderPlans() {
   const list = D.photos.filter(p => p.cat === 'plan'); const order = byArea(list);
   list.sort((a, b) => order.indexOf(a.area) - order.indexOf(b.area) || String(a.createdAt).localeCompare(String(b.createdAt)));
   $('#planList').innerHTML = list.length ? list.map(p => `<a class="plan" href="${img(p.fileId, 3000)}" target="_blank" rel="noopener"><img src="${img(p.fileId, 1400)}" alt="${esc(p.area)}平面圖" loading="lazy">
-    <div class="cap"><b>${esc(p.area || '平面圖')}</b><span class="small muted">${esc(p.caption || '')}</span></div>${ADMIN ? `<button class="x" data-dp="${esc(p.id)}">刪除</button>` : ''}</a>`).join('') : '<div class="empty">尚未上傳平面圖</div>';
+    <div class="cap"><b>${esc(p.area || '平面圖')}</b><span class="small muted">${esc(p.caption || '')}</span></div>${ADMIN ? `<button class="e" data-ep="${esc(p.id)}">編輯</button><button class="x" data-dp="${esc(p.id)}">刪除</button>` : ''}</a>`).join('') : '<div class="empty">尚未上傳平面圖</div>';
   bindDel($('#planList'), '刪除這張平面圖？');
 }
 function renderPolicy() {
@@ -318,13 +342,98 @@ function evHtml(u) {
   const ps = (u.photoIds || []).map(id => D.photos.find(p => p.id === id)).filter(Boolean);
   return `<div class="ev"><div class="d">${esc(roc(u.date))}<span class="tag">${esc(String(u.stage || '').split('｜')[0])}</span></div>
     <h4>${esc(u.title)}</h4>${u.note ? `<p>${esc(u.note)}</p>` : ''}${ps.length ? `<div class="grid">${ps.map(p => `<div class="ph"><a href="${img(p.fileId, 2400)}" target="_blank" rel="noopener"><img src="${img(p.fileId, 700)}" loading="lazy" alt=""></a></div>`).join('')}</div>` : ''}
-    ${ADMIN ? `<button class="link" data-du="${esc(u.id)}">刪除此紀錄</button>` : ''}</div>`;
+    ${ADMIN ? `<div class="rowlinks"><button class="link" data-eu="${esc(u.id)}">編輯此紀錄</button><button class="link" data-du="${esc(u.id)}">刪除此紀錄</button></div>` : ''}</div>`;
 }
 function renderUpdates() {
   const list = [...D.updates].sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.createdAt).localeCompare(String(a.createdAt)));
   $('#timeline').innerHTML = list.length ? list.map(evHtml).join('') : '<div class="empty">尚無施工紀錄</div>';
   $('#latest').innerHTML = list.length ? list.slice(0, 2).map(evHtml).join('') + '<button class="btn ghost block" onclick="go(\'progress\')">查看全部紀錄</button>' : '<div class="empty">開工後會在這裡公布施工紀錄與照片</div>';
   $$('[data-du]').forEach(b => b.onclick = () => act('deleteUpdate', { id: b.dataset.du }, '刪除這筆施工紀錄（含照片）？'));
+  $$('[data-eu]').forEach(b => b.onclick = () => editUpdate(D.updates.find(u => u.id === b.dataset.eu)));
+}
+
+/* ---------- 編輯 ---------- */
+let ED_SAVE = null;
+function openEditor(title, html, onSave) {
+  $('#edTitle').textContent = title; $('#edBody').innerHTML = html; ED_SAVE = onSave;
+  $('#edlg').showModal(); $('#edlg .db').scrollTop = 0;
+}
+$$('[data-eclose]').forEach(b => b.onclick = () => $('#edlg').close());
+$('#edForm').onsubmit = async e => {
+  e.preventDefault(); if (!ED_SAVE) return;
+  try { const ok = await ED_SAVE($('#edBody')); if (ok === false) { busy(false); return; } $('#edlg').close(); await load(); }
+  catch (err) { alert('儲存失敗：' + err.message); }
+  busy(false);
+};
+const opts = (arr, cur) => { const a = arr.includes(cur) || !cur ? arr : [cur, ...arr]; return a.map(v => `<option ${v === cur ? 'selected' : ''}>${esc(v)}</option>`).join(''); };
+// 現有照片／檔案：點「移除」標記，儲存時才真的刪
+function tilesHtml(items) {
+  return items.length ? `<div class="eph">${items.map(t => `<div class="t" data-tid="${esc(t.id)}">${t.img ? `<img src="${img(t.img, 300)}" alt="">` : `<div class="pdf">📄 ${esc(t.name || 'PDF')}</div>`}<button type="button">移除</button></div>`).join('')}</div>` : '<div class="hint">（目前沒有）</div>';
+}
+function bindTiles(box) {
+  $$('.eph .t', box).forEach(t => t.querySelector('button').onclick = () => { t.classList.toggle('rm'); t.querySelector('button').textContent = t.classList.contains('rm') ? '復原' : '移除'; });
+}
+const marked = box => $$('.eph .t.rm', box).map(t => t.dataset.tid);
+function bindPreview(input, out) {
+  input.onchange = () => { out.innerHTML = [...input.files].map(f => f.type.startsWith('image/') ? `<img src="${URL.createObjectURL(f)}" alt="">` : `<span class="small">📄 ${esc(f.name)}</span>`).join(''); };
+}
+
+function editUpdate(u) {
+  if (!u) return;
+  const ps = (u.photoIds || []).map(id => D.photos.find(p => p.id === id)).filter(Boolean);
+  const stages = (D.cfg.stages || []).map(s => s.n + (s.d ? '｜' + s.d : '')).concat(['其他']);
+  openEditor('編輯施工紀錄', `
+    <label>日期<input type="date" name="date" value="${esc(String(u.date || '').slice(0, 10))}" required></label>
+    <label>階段<select name="stage">${opts(stages, u.stage)}</select></label>
+    <label>標題<input name="title" value="${esc(u.title)}" required></label>
+    <label>說明<textarea name="note">${esc(u.note)}</textarea></label>
+    <label>目前照片（點「移除」可刪掉單張）</label>${tilesHtml(ps.map(p => ({ id: p.id, img: p.fileId })))}
+    <label>補上傳照片（可多選）<input type="file" name="files" accept="image/*" multiple></label><div class="newprev" id="np"></div>`,
+    async box => {
+      const v = n => box.querySelector(`[name=${n}]`).value.trim();
+      if (!v('date') || !v('title')) { alert('請填日期和標題'); return false; }
+      const rm = marked(box);
+      if (rm.length && !confirm(`確定移除 ${rm.length} 張照片？`)) return false;
+      const files = [...box.querySelector('[name=files]').files];
+      const add = files.length ? await uploadAll(files, { cat: 'update', area: '', caption: v('title') }) : [];
+      busy(true, '儲存中…');
+      await apiPost({ action: 'editUpdate', id: u.id, date: v('date'), stage: v('stage'), title: v('title'), note: box.querySelector('[name=note]').value.trim(), addPhotoIds: add, removePhotoIds: rm });
+    });
+  bindTiles($('#edBody')); bindPreview($('#edBody [name=files]'), $('#np'));
+}
+
+function editDoc(d) {
+  if (!d) return;
+  const types = ['主合約（簽署版）', '報價單', '追加合約', '變更簽認', '其他文件'];
+  openEditor('編輯合約文件', `
+    <label>類型<select name="type">${opts(types, d.type)}</select></label>
+    <label>名稱<input name="title" value="${esc(d.title)}" required></label>
+    <label>簽訂日期<input type="date" name="date" value="${esc(String(d.date || '').slice(0, 10))}"></label>
+    <label>目前檔案（點「移除」可刪掉單頁）</label>${tilesHtml((d.files || []).map(f => ({ id: f.id, img: String(f.mime).startsWith('image/') ? f.id : '', name: f.name })))}
+    <label>補上傳檔案（照片或 PDF，可多選，會接在最後面）<input type="file" name="files" accept="image/*,application/pdf" multiple></label><div class="newprev" id="np"></div>`,
+    async box => {
+      const v = n => box.querySelector(`[name=${n}]`).value.trim();
+      if (!v('title')) { alert('請填名稱'); return false; }
+      const rm = marked(box);
+      if (rm.length && !confirm(`確定移除 ${rm.length} 個檔案？`)) return false;
+      const files = [...box.querySelector('[name=files]').files]; let i = 0;
+      for (const f of files) { i++; busy(true, `上傳 ${i}/${files.length}…`); await apiPost({ action: 'uploadDocFile', docId: d.id, name: f.name, data: await fileData(f) }); }
+      busy(true, '儲存中…');
+      await apiPost({ action: 'editDoc', id: d.id, type: v('type'), title: v('title'), date: v('date'), removeFileIds: rm });
+    });
+  bindTiles($('#edBody')); bindPreview($('#edBody [name=files]'), $('#np'));
+}
+
+function editPhoto(p) {
+  if (!p) return;
+  openEditor(p.cat === 'plan' ? '編輯平面圖說明' : '編輯照片說明', `
+    <img src="${img(p.fileId, 700)}" alt="" style="border-radius:8px;max-height:240px;object-fit:contain;background:var(--paper)">
+    ${p.cat === 'policy' ? '' : `<label>位置<select name="area">${opts(areas(), p.area)}</select></label>`}
+    <label>說明<input name="caption" value="${esc(p.caption)}"></label>`,
+    async box => {
+      busy(true, '儲存中…'); const a = box.querySelector('[name=area]');
+      await apiPost({ action: 'editPhoto', id: p.id, caption: box.querySelector('[name=caption]').value.trim(), ...(a ? { area: a.value } : {}) });
+    });
 }
 
 /* ---------- 管理 ---------- */
