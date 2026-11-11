@@ -25,7 +25,7 @@ const store = {
   set(k, v) { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { } }
 };
 let PASS = store.get('pj_pass');
-function setPass(p) { PASS = p || ''; store.set('pj_pass', PASS); }
+function setPass(p) { PASS = p || ''; store.set('pj_pass', PASS); if (!PASS) store.set('ld_pass', ''); }  // 登出時一併登出龍德路獨立頁
 
 /* ---------- 後端 ---------- */
 async function fetchJ(url, opt = {}, limit = 30000) {
