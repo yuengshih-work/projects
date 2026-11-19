@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E2833">
+<meta name="robots" content="noindex,nofollow">
+<title>下包廠商管理｜平安住</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css">
+<link rel="stylesheet" href="vendor.css">
+<style>
+body{padding-bottom:30px}
+.wrap.wide{max-width:900px}
+header.top nav{display:flex;gap:14px;font-size:14px;margin-top:6px}
+header.top nav a,header.top nav button{color:#F6F2EA;opacity:.85;background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:16px 0 12px;padding-bottom:2px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:4px 14px;font-size:15px;cursor:pointer;min-height:38px;white-space:nowrap;flex:none}
+.tab[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.tab .n{font-size:12px;opacity:.75;margin-left:4px}
+.pane{display:none}.pane.on{display:block}
+.vc .vh{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.vc .vn{font-family:var(--serif);font-weight:900;font-size:19px;line-height:1.4}
+.vc .acts,.rowacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.vc.off{opacity:.6}
+.trow select{padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--paper);font-size:14px}
+.trow .tm{cursor:pointer}
+.trow .tm:hover .ti{text-decoration:underline}
+.lrow{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--paper);display:grid;gap:8px;margin-bottom:8px}
+.lrow .lh{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--muted)}
+.lrow .lh button{background:none;border:1px solid var(--line);border-radius:6px;min-width:34px;min-height:32px;cursor:pointer;color:var(--muted)}
+.lrow input{padding:9px 10px;font-size:16px;background:var(--card)}
+.two{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+.cks{display:grid;gap:2px;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--paper)}
+.cks label{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--ink);line-height:1.4;padding:4px 0}
+.cks input,.f .ck input{width:20px;height:20px;flex:none;accent-color:var(--accent);padding:0;margin:0}
+.chips2{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chips2 .tab{min-height:32px;font-size:14px;padding:2px 12px}
+.pendc{border-left:4px solid var(--warn)}
+.pendc .pi{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.pendc .pi:last-child{border-bottom:0}
+.ph .t b{color:var(--blue)}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap wide">
+    <div class="firm">平安住・下包廠商管理（內部）</div>
+    <h1 id="caseName">讀取中…</h1>
+    <div class="addr" id="caseAddr"></div>
+    <nav id="topnav" style="display:none"><a href="../">← 回專案總覽</a><button id="logout">登出</button></nav>
+  </div>
+</header>
+
+<main class="wrap wide">
+  <div id="sysNote" class="note" style="display:none"></div>
+
+  <div id="login" class="card" style="display:none;max-width:420px;margin:30px auto">
+    <h2>平安住登入</h2>
+    <p class="lead">此頁僅供平安住內部使用，請輸入管理密碼。</p>
+    <form class="f" id="loginForm">
+      <label>管理密碼<input type="password" name="p" autocomplete="current-password" required></label>
+      <button class="btn acc block" type="submit">登入</button>
+    </form>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="tabs" id="tabs">
+      <button class="tab" data-t="vendors" aria-pressed="true">廠商<span class="n" id="nV"></span></button>
+      <button class="tab" data-t="tasks" aria-pressed="false">工項時程<span class="n" id="nT"></span></button>
+      <button class="tab" data-t="notices" aria-pressed="false">注意事項<span class="n" id="nN"></span></button>
+      <button class="tab" data-t="model" aria-pressed="false">3D 與聯絡窗口</button>
+      <button class="tab" data-t="photos" aria-pressed="false">廠商照片<span class="n" id="nP"></span></button>
+    </div>
+
+    <section class="pane on" id="p-vendors">
+      <div class="toolbar"><span class="small muted" style="flex:1">每家廠商一條專屬連結，傳到 LINE 即可，不用帳號密碼。</span><button class="btn acc sm" id="addVendor">＋ 新增廠商</button></div>
+      <div id="vendorList"></div>
+    </section>
+
+    <section class="pane" id="p-tasks">
+      <div id="pending"></div>
+      <div class="toolbar"><span class="small muted" style="flex:1">所有廠商都看得到全案時程（不含金額）；工項備註只有負責廠商看得到。</span><button class="btn acc sm" id="addTask">＋ 新增工項</button></div>
+      <div class="chips2" id="taskFilter"></div>
+      <div id="taskList"></div>
+    </section>
+
+    <section class="pane" id="p-notices">
+      <div class="toolbar"><span class="small muted" style="flex:1">可指定給全部或部分廠商；標「重要」會顯示在廠商頁最上方。</span><button class="btn acc sm" id="addNotice">＋ 新增注意事項</button></div>
+      <div id="noticeList"></div>
+    </section>
+
+    <section class="pane" id="p-model">
+      <div class="card">
+        <form class="f" id="vpForm">
+          <label>3D 示意圖網址<input name="model" placeholder="例：../models/longde/" autocapitalize="off" spellcheck="false">
+            <span class="hint">3D 檔放在 projects repo 的 models/ 資料夾時，廠商頁會自動抓檔案最後修改日期。</span></label>
+          <label>現場聯絡窗口（所有廠商都看得到，電話會變成可直接撥打）<textarea name="contacts" placeholder="例：&#10;現場負責人　王先生 0912-345-678&#10;平安住辦公室 07-9623551 分機555"></textarea></label>
+          <button class="btn" type="submit">儲存</button>
+        </form>
+      </div>
+      <div class="card">
+        <b>3D 更改紀錄</b>
+        <p class="small muted" style="margin:2px 0 10px">每次改 3D 記一筆，廠商頁會顯示最新更改日期和說明。</p>
+        <form class="f" id="logForm">
+          <div class="two" style="grid-template-columns:150px 1fr"><input type="date" name="date" required><input name="note" placeholder="改了什麼，例：2F 側窗改封、外牆改配色A" required></div>
+          <button class="btn ghost sm" type="submit">＋ 新增一筆</button>
+        </form>
+        <div id="logList" style="margin-top:10px"></div>
+      </div>
+      <h3>廠商看到的樣子</h3>
+      <div id="modelPrev"></div>
+    </section>
+
+    <section class="pane" id="p-photos">
+      <div class="chips2" id="photoFilter"></div>
+      <div id="photoList"></div>
+    </section>
+  </div>
+
+  <footer>平安住股份有限公司・統編 90052437・07-9623551 分機555</footer>
+</main>
+
+<dialog class="dlg" id="dlg">
+  <form id="dlgForm" novalidate>
+    <div class="dh"><b id="dlgTitle">編輯</b><button type="button" class="x-close" data-close aria-label="關閉">×</button></div>
+    <div class="db f" id="dlgBody"></div>
+    <div class="df"><button type="button" class="btn ghost sm" id="dlgDel" style="margin-right:auto;display:none">刪除</button><button type="button" class="btn ghost" data-close>取消</button><button type="submit" class="btn acc">儲存</button></div>
+  </form>
+</dialog>
+
+<div class="spin" id="spin"><div id="spinTxt">處理中…</div></div>
+
+<script src="../assets/common.js"></script>
+<script src="vendor.js"></script>
+<script>
+const ID = (new URLSearchParams(location.search).get('id') || '').trim().toLowerCase();
+let A = { vendors: [], tasks: [], notices: [], vphotos: [], vp: {} };
+let TF = '', PF = '';
+const vendorLink = v => new URL('./?t=' + encodeURIComponent(v.token), location.href).href;
+const vName = id => { const v = A.vendors.find(x => x.id === id); return v ? (v.trade ? v.trade + '・' : '') + v.name : '未指定'; };
+const tasksView = () => A.tasks.map(t => { const v = A.vendors.find(x => x.id === t.vendorId) || {}; return { ...t, status: t.status || '未開始', vendor: v.name || '', trade: v.trade || '' }; });
+
+/* ---------- 登入 ---------- */
+function showLogin(msg) { $('#login').style.display = 'block'; $('#app').style.display = 'none'; $('#topnav').style.display = 'none'; if (msg) note(msg); }
+function note(msg) { const n = $('#sysNote'); n.style.display = msg ? 'block' : 'none'; n.textContent = msg || ''; }
+$('#loginForm').onsubmit = async e => {
+  e.preventDefault(); const p = e.target.p.value.trim(); if (!p) return; setPass(p); busy(true, '驗證中…');
+  try { await apiPost({ action: 'checkAdmin' }); e.target.p.value = ''; note(''); await load(); } catch (err) { setPass(''); alert('登入失敗：' + err.message); }
+  busy(false);
+};
+$('#logout').onclick = () => { if (confirm('登出？')) { setPass(''); showLogin(); } };
+
+/* ---------- tabs ---------- */
+$$('#tabs .tab').forEach(b => b.onclick = () => tab(b.dataset.t));
+function tab(t) { $$('#tabs .tab').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === t)); $$('.pane').forEach(p => p.classList.toggle('on', p.id === 'p-' + t)); history.replaceState(null, '', location.search + '#' + t); }
+
+/* ---------- 共用對話框 ---------- */
+let DLG = null;
+function dialog(title, html, onSave, onDel) {
+  $('#dlgTitle').textContent = title; $('#dlgBody').innerHTML = html; DLG = { onSave, onDel };
+  $('#dlgDel').style.display = onDel ? 'inline-flex' : 'none'; $('#dlg').showModal(); $('#dlg .db').scrollTop = 0;
+}
+$$('[data-close]').forEach(b => b.onclick = () => $('#dlg').close());
+$('#dlgForm').onsubmit = async e => {
+  e.preventDefault(); if (!DLG) return;
+  try { const r = await DLG.onSave($('#dlgBody')); if (r === false) { busy(false); return; } $('#dlg').close(); await load(); if (typeof r === 'function') r(); }
+  catch (err) { alert('儲存失敗：' + err.message); }
+  busy(false);
+};
+$('#dlgDel').onclick = async () => {
+  if (!DLG || !DLG.onDel) return;
+  try { const r = await DLG.onDel(); if (r === false) return; $('#dlg').close(); await load(); } catch (err) { alert('刪除失敗：' + err.message); }
+  busy(false);
+};
+const val = (box, n) => { const el = box.querySelector(`[name="${n}"]`); return el ? el.value.trim() : ''; };
+const chk = (box, n) => !!(box.querySelector(`[name="${n}"]`) || {}).checked;
+async function post(body, t = '儲存中…') { busy(true, t); return apiPost({ caseId: ID, ...body }); }
+async function copy(text, btn) {
+  try { await navigator.clipboard.writeText(text); if (btn) { const o = btn.textContent; btn.textContent = '已複製'; setTimeout(() => btn.textContent = o, 1500); } }
+  catch (_) { prompt('複製這個連結', text); }
+}
+
+/* ---------- 廠商 ---------- */
+function renderVendors() {
+  const vs = [...A.vendors].sort((a, b) => (+a.sort || 0) - (+b.sort || 0) || String(a.trade).localeCompare(String(b.trade), 'zh-Hant'));
+  const week = addDays(today(), -7);
+  $('#vendorList').innerHTML = vs.length ? vs.map(v => {
+    const nt = A.tasks.filter(t => t.vendorId === v.id).length, ps = A.vphotos.filter(p => p.vendorId === v.id), np = ps.filter(p => twDate(p.createdAt) >= week).length;
+    return `<div class="card vc ${v.active ? '' : 'off'}"><div class="vh"><div>
+      <div class="vn">${esc(v.name)}</div><div class="small muted">${esc(v.trade || '未填工種')}${v.contact ? '・' + esc(v.contact) : ''}${v.phone ? '　' + linkify(v.phone) : ''}</div></div>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${v.active ? '' : '<span class="pill">連結已停用</span>'}${v.showMoney ? '<span class="pill blue">顯示金額</span>' : ''}</div></div>
+      <div class="small" style="margin-top:6px">工項 ${nt} 項・照片 ${ps.length} 張${np ? `<span class="pill go" style="margin-left:6px">近 7 天 ${np} 張</span>` : ''}${v.showMoney ? `・發包 ${money(v.amount)}` : ''}</div>
+      <div class="acts"><button class="btn sm" data-cp="${esc(v.id)}">複製廠商連結</button><a class="btn ghost sm" href="${esc(vendorLink(v))}" target="_blank" rel="noopener">預覽廠商頁</a><button class="btn ghost sm" data-ev="${esc(v.id)}">編輯</button></div></div>`;
+  }).join('') : '<div class="empty">還沒有下包廠商，按「＋ 新增廠商」開始</div>';
+  $$('#vendorList [data-cp]').forEach(b => b.onclick = () => copy(vendorLink(A.vendors.find(v => v.id === b.dataset.cp)), b));
+  $$('#vendorList [data-ev]').forEach(b => b.onclick = () => editVendor(A.vendors.find(v => v.id === b.dataset.ev)));
+}
+$('#addVendor').onclick = () => editVendor(null);
+function payRows(ps) {
+  return ps.map((p, i) => `<div class="lrow" data-i="${i}"><div class="lh"><span>第 ${i + 1} 筆</span><button type="button" data-rmp="${i}" aria-label="刪除">✕</button></div>
+    <div class="two" style="grid-template-columns:1fr 130px"><input data-k="p" value="${esc(p.p || '')}" placeholder="期別，例：第一期"><input data-k="amt" inputmode="numeric" value="${p.amt || ''}" placeholder="金額"></div>
+    <input data-k="c" value="${esc(p.c || '')}" placeholder="請款條件，例：配管完成、隱蔽前查驗合格">
+    <div class="two"><label class="small muted">請款日<input type="date" data-k="req" value="${esc(p.req || '')}"></label><label class="small muted">付款日<input type="date" data-k="paid" value="${esc(p.paid || '')}"></label></div></div>`).join('');
+}
+function readPays(box) {
+  return $$('#payRows .lrow', box).map(r => { const o = {}; $$('[data-k]', r).forEach(el => o[el.dataset.k] = el.dataset.k === 'amt' ? (+String(el.value).replace(/[^\d.]/g, '') || 0) : el.value.trim()); return o; });
+}
+function editVendor(v) {
+  const isNew = !v; v = v || { name: '', trade: '', contact: '', phone: '', active: true, showMoney: false, amount: 0, pays: [], note: '', sort: A.vendors.length + 1 };
+  let pays = JSON.parse(JSON.stringify(v.pays || []));
+  dialog(isNew ? '新增下包廠商' : '編輯廠商', `
+    <div class="two"><label>廠商名稱 *<input name="name" value="${esc(v.name)}" placeholder="例：大成水電行" required></label><label>工種<input name="trade" value="${esc(v.trade)}" placeholder="例：水電" list="trades"></label></div>
+    <datalist id="trades">${['拆除清運', '水電', '泥作', '防水', '鐵件', '鋁窗', '批土油漆', '外牆', '木作', '清潔'].map(x => `<option>${x}</option>`).join('')}</datalist>
+    <div class="two"><label>聯絡人<input name="contact" value="${esc(v.contact)}"></label><label>電話<input name="phone" value="${esc(v.phone)}" inputmode="tel"></label></div>
+    <label class="ck"><input type="checkbox" name="active" ${v.active !== false ? 'checked' : ''}>連結啟用中（取消勾選，廠商就打不開）</label>
+    <div class="sec" style="border-top:1px solid var(--line);padding-top:12px">
+      <label class="ck"><input type="checkbox" name="showMoney" ${v.showMoney ? 'checked' : ''}>讓這家廠商看到自己的發包金額與請款進度</label>
+      <span class="hint">只會顯示這家廠商自己的金額；業主合約金額、其他廠商金額都不會顯示。</span></div>
+    <label>發包金額<input name="amount" inputmode="numeric" value="${v.amount || ''}" placeholder="例：850000"></label>
+    <div><div class="small muted" style="margin-bottom:6px">請款期別</div><div id="payRows">${payRows(pays)}</div><button type="button" class="btn ghost sm" id="addPay">＋ 新增一期</button><div class="small" id="paySum" style="margin-top:6px"></div></div>
+    <label>內部備註（廠商看不到）<textarea name="note" style="min-height:70px">${esc(v.note || '')}</textarea></label>
+    ${isNew ? '' : `<div class="card" style="margin:0;background:var(--paper)"><b class="small">廠商專屬連結</b><div class="tiny muted" style="word-break:break-all;margin:4px 0 8px">${esc(vendorLink(v))}</div>
+      <div class="rowacts" style="margin-top:0"><button type="button" class="btn ghost sm" id="cpLink">複製</button><button type="button" class="btn ghost sm" id="newTok">重新產生連結（舊連結失效）</button></div></div>`}`,
+    async box => {
+      if (!val(box, 'name')) { alert('請填廠商名稱'); return false; }
+      const r = await post({ action: 'saveVendor', vendor: { id: v.id, name: val(box, 'name'), trade: val(box, 'trade'), contact: val(box, 'contact'), phone: val(box, 'phone'),
+        active: chk(box, 'active'), showMoney: chk(box, 'showMoney'), amount: +val(box, 'amount').replace(/[^\d.]/g, '') || 0, pays: readPays(box), note: box.querySelector('[name=note]').value, sort: v.sort } });
+      if (isNew && r.token) return () => { if (confirm('已新增。要複製這家廠商的專屬連結嗎？')) copy(vendorLink({ token: r.token })); };
+    },
+    isNew ? null : async () => { if (!confirm(`刪除廠商「${v.name}」？`)) return false; await post({ action: 'deleteVendor', id: v.id }, '刪除中…'); });
+  const box = $('#dlgBody');
+  const sum = () => { const ps = readPays(box), s = ps.reduce((a, p) => a + (+p.amt || 0), 0), amt = +val(box, 'amount').replace(/[^\d.]/g, '') || 0;
+    $('#paySum').innerHTML = ps.length ? `期別合計 ${money(s)}${amt && s !== amt ? `<span style="color:var(--warn)">（與發包金額差 ${money(amt - s)}）</span>` : ''}` : ''; };
+  const redraw = () => { pays = readPays(box); };
+  const bindRows = () => { $$('#payRows [data-rmp]', box).forEach(b => b.onclick = () => { redraw(); pays.splice(+b.dataset.rmp, 1); $('#payRows').innerHTML = payRows(pays); bindRows(); sum(); }); $$('#payRows input', box).forEach(el => el.oninput = sum); };
+  $('#addPay').onclick = () => { redraw(); pays.push({ p: `第${pays.length + 1}期`, c: '', amt: 0, req: '', paid: '' }); $('#payRows').innerHTML = payRows(pays); bindRows(); sum(); };
+  box.querySelector('[name=amount]').oninput = sum; bindRows(); sum();
+  if (!isNew) {
+    $('#cpLink').onclick = e => copy(vendorLink(v), e.target);
+    $('#newTok').onclick = async () => {
+      if (!confirm('重新產生後，舊連結立刻失效，需要把新連結再傳給廠商。確定？')) return;
+      try { const r = await post({ action: 'newToken', id: v.id }, '產生中…'); busy(false); $('#dlg').close(); await load(); copy(vendorLink({ token: r.token })); alert('已產生新連結並複製，請傳給廠商。'); }
+      catch (err) { busy(false); alert('失敗：' + err.message); }
+    };
+  }
+}
+
+/* ---------- 工項 ---------- */
+function renderTasks() {
+  const ts = tasksView();
+  const pend = ts.filter(t => t.status === '待驗收');
+  $('#pending').innerHTML = pend.length ? `<div class="card pendc"><b>廠商回報完工，待驗收</b>${pend.map(t => `<div class="pi"><div><span class="small" style="color:var(--blue);font-weight:700">${esc(vName(t.vendorId))}</span><br>${esc(t.title)}${t.area ? '・' + esc(t.area) : ''}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost sm" data-ph="${esc(t.vendorId)}">看照片</button><button class="btn sm" data-pass="${esc(t.id)}">驗收合格</button></div></div>`).join('')}</div>` : '';
+  $$('#pending [data-pass]').forEach(b => b.onclick = () => setStatus(b.dataset.pass, '已完成'));
+  $$('#pending [data-ph]').forEach(b => b.onclick = () => { PF = b.dataset.ph; renderPhotos(); tab('photos'); });
+  const used = A.vendors.filter(v => ts.some(t => t.vendorId === v.id));
+  $('#taskFilter').innerHTML = ts.length ? [['', '全部'], ...used.map(v => [v.id, (v.trade || v.name)])].map(([k, n]) => `<button class="tab" data-f="${esc(k)}" aria-pressed="${TF === k}">${esc(n)}</button>`).join('') : '';
+  $$('#taskFilter .tab').forEach(b => b.onclick = () => { TF = b.dataset.f; renderTasks(); });
+  const list = ts.filter(t => !TF || t.vendorId === TF);
+  $('#taskList').innerHTML = list.length ? byMonth(list).map(g => `<div class="mhd">${esc(g.label)}</div><div class="card">${g.items.map(t => {
+    const r = readiness(t, ts);
+    return `<div class="trow" data-s="${esc(t.status)}"><div class="td">${esc(range(t, true))}</div>
+      <div class="tm" data-et="${esc(t.id)}"><div class="trade">${esc(vName(t.vendorId))}</div><div class="ti">${esc(t.title)}${t.area ? `<span class="muted">・${esc(t.area)}</span>` : ''}</div>
+      ${r && r.cls === 'wait' && t.status === '未開始' ? `<div class="tiny" style="color:var(--warn)">等前置：${esc((t.deps || []).map(id => (ts.find(x => x.id === id) || {}).title).filter(Boolean).join('、'))}</div>` : ''}</div>
+      <div class="ts"><select data-st="${esc(t.id)}">${TASK_STATUS.map(s => `<option ${t.status === s ? 'selected' : ''}>${s}</option>`).join('')}</select></div></div>`;
+  }).join('')}</div>`).join('') : `<div class="empty">${A.vendors.length ? '還沒有工項，按「＋ 新增工項」開始' : '請先到「廠商」新增下包廠商，再排工項'}</div>`;
+  $$('#taskList [data-st]').forEach(s => s.onchange = () => setStatus(s.dataset.st, s.value));
+  $$('#taskList [data-et]').forEach(el => el.onclick = () => editTask(A.tasks.find(t => t.id === el.dataset.et)));
+}
+async function setStatus(id, status) { try { await post({ action: 'setTaskStatus', id, status }); await load(); } catch (err) { alert('失敗：' + err.message); await load(); } busy(false); }
+$('#addTask').onclick = () => editTask(null);
+function editTask(t) {
+  const isNew = !t; t = t || { title: '', vendorId: TF || '', area: '', start: '', end: '', status: '未開始', deps: [], note: '' };
+  const others = tasksView().filter(x => x.id !== t.id);
+  dialog(isNew ? '新增工項' : '編輯工項', `
+    <label>工項名稱 *<input name="title" value="${esc(t.title)}" placeholder="例：2F～3F 給排水配管" required></label>
+    <div class="two"><label>負責廠商<select name="vendorId"><option value="">— 未指定 —</option>${A.vendors.map(v => `<option value="${esc(v.id)}" ${v.id === t.vendorId ? 'selected' : ''}>${esc((v.trade ? v.trade + '・' : '') + v.name)}</option>`).join('')}</select></label>
+      <label>位置<input name="area" value="${esc(t.area)}" placeholder="例：2F～3F、外牆"></label></div>
+    <div class="two"><label>預定開始<input type="date" name="start" value="${esc(t.start || '')}"></label><label>預定完成<input type="date" name="end" value="${esc(t.end || '')}"></label></div>
+    <label>狀態<select name="status">${TASK_STATUS.map(s => `<option ${t.status === s ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
+    <div><div class="small muted" style="margin-bottom:4px">前置工項（這些完成後才能進場；廠商頁會自動顯示能不能進場）</div>
+      ${others.length ? `<div class="cks">${others.map(o => `<label><input type="checkbox" name="dep" value="${esc(o.id)}" ${(t.deps || []).includes(o.id) ? 'checked' : ''}>${esc(o.trade || o.vendor || '未指定')}・${esc(o.title)}<span class="tiny muted">　${esc(range(o, true))}</span></label>`).join('')}</div>` : '<div class="hint">（還沒有其他工項）</div>'}</div>
+    <label>給負責廠商的備註（只有這家廠商看得到）<textarea name="note" style="min-height:80px" placeholder="例：管線走向依 2F 衛浴平面圖；隱蔽前通知平安住查驗">${esc(t.note || '')}</textarea></label>`,
+    async box => {
+      if (!val(box, 'title')) { alert('請填工項名稱'); return false; }
+      if (val(box, 'start') && val(box, 'end') && val(box, 'end') < val(box, 'start')) { alert('完成日不能早於開始日'); return false; }
+      await post({ action: 'saveTask', task: { id: t.id, title: val(box, 'title'), vendorId: val(box, 'vendorId'), area: val(box, 'area'), start: val(box, 'start'), end: val(box, 'end'),
+        status: val(box, 'status'), deps: $$('[name=dep]:checked', box).map(x => x.value), note: box.querySelector('[name=note]').value.trim(), sort: t.sort } });
+    },
+    isNew ? null : async () => { if (!confirm(`刪除工項「${t.title}」？`)) return false; await post({ action: 'deleteTask', id: t.id }, '刪除中…'); });
+}
+
+/* ---------- 注意事項 ---------- */
+function renderNotices() {
+  const list = [...A.notices].sort((a, b) => (b.important - a.important) || String(b.updatedAt).localeCompare(String(a.updatedAt)));
+  $('#noticeList').innerHTML = list.length ? list.map(n => `<div class="card note2 ${n.important ? 'imp' : ''}">
+    <div class="nh"><b>${n.important ? '<span class="pill solid">重要</span> ' : ''}${esc(n.title)}</b><span class="tiny muted">${esc(rocS(n.updatedAt))}</span></div>
+    <div class="tiny" style="color:var(--blue);margin-top:2px">給：${(n.vendorIds || []).length ? esc(n.vendorIds.map(vName).join('、')) : '全部廠商'}</div>
+    ${n.body ? `<div class="nb">${linkify(n.body)}</div>` : ''}<div class="rowacts"><button class="link" data-en="${esc(n.id)}">編輯</button></div></div>`).join('')
+    : '<div class="empty">還沒有注意事項。建議先放：施工時段、管委會規定、材料搬運與停車、垃圾清運、成品保護、安全規定</div>';
+  $$('#noticeList [data-en]').forEach(b => b.onclick = () => editNotice(A.notices.find(n => n.id === b.dataset.en)));
+}
+$('#addNotice').onclick = () => editNotice(null);
+function editNotice(n) {
+  const isNew = !n; n = n || { title: '', body: '', important: false, vendorIds: [] };
+  dialog(isNew ? '新增注意事項' : '編輯注意事項', `
+    <label>標題 *<input name="title" value="${esc(n.title)}" placeholder="例：施工時間與噪音" required></label>
+    <label>內容<textarea name="body" placeholder="例：平日 8:00～17:00，週日及國定假日不得施作敲打工程">${esc(n.body || '')}</textarea></label>
+    <label class="ck"><input type="checkbox" name="important" ${n.important ? 'checked' : ''}>重要（顯示在廠商頁最上方）</label>
+    <div><div class="small muted" style="margin-bottom:4px">給哪些廠商看（都不勾＝全部廠商）</div>
+      ${A.vendors.length ? `<div class="cks">${A.vendors.map(v => `<label><input type="checkbox" name="vid" value="${esc(v.id)}" ${(n.vendorIds || []).includes(v.id) ? 'checked' : ''}>${esc((v.trade ? v.trade + '・' : '') + v.name)}</label>`).join('')}</div>` : '<div class="hint">（還沒有廠商，會給全部廠商）</div>'}</div>`,
+    async box => {
+      if (!val(box, 'title')) { alert('請填標題'); return false; }
+      await post({ action: 'saveNotice', notice: { id: n.id, title: val(box, 'title'), body: box.querySelector('[name=body]').value.trim(), important: chk(box, 'important'), vendorIds: $$('[name=vid]:checked', box).map(x => x.value), sort: n.sort } });
+    },
+    isNew ? null : async () => { if (!confirm(`刪除「${n.title}」？`)) return false; await post({ action: 'deleteNotice', id: n.id }, '刪除中…'); });
+}
+
+/* ---------- 3D 與窗口 ---------- */
+function renderVP() {
+  const vp = A.vp || {}, f = $('#vpForm');
+  f.model.value = vp.model || ''; f.contacts.value = vp.contacts || '';
+  if (!vp.model) f.model.placeholder = `例：../models/${ID}/`;
+  const log = [...(vp.log || [])].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  $('#logList').innerHTML = log.length ? log.map(x => `<div class="pi" style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:15px">
+    <span><span class="muted">${esc(rocS(x.date))}</span>　${esc(x.note || '')}</span><button class="link" data-rl="${esc(x.date + '|' + x.note)}">刪除</button></div>`).join('') : '<div class="small muted">尚無紀錄</div>';
+  $$('#logList [data-rl]').forEach(b => b.onclick = () => { if (!confirm('刪除這筆紀錄？')) return; saveVP({ log: (vp.log || []).filter(x => x.date + '|' + x.note !== b.dataset.rl) }); });
+  renderModel($('#modelPrev'), vp);
+  if (!vp.model) $('#modelPrev').innerHTML = '<div class="empty">填入 3D 網址後會顯示在這裡</div>';
+}
+async function saveVP(patch) {
+  try { const r = await post({ action: 'saveVP', vp: patch }); A.vp = r.vp; renderVP(); } catch (err) { alert('儲存失敗：' + err.message); }
+  busy(false);
+}
+$('#vpForm').onsubmit = e => { e.preventDefault(); saveVP({ model: e.target.model.value.trim(), contacts: e.target.contacts.value.trim() }); };
+$('#logForm').onsubmit = e => {
+  e.preventDefault(); const f = e.target; if (!f.date.value || !f.note.value.trim()) return;
+  saveVP({ log: [...(A.vp.log || []), { date: f.date.value, note: f.note.value.trim() }] }).then(() => { f.note.value = ''; });
+};
+
+/* ---------- 廠商照片 ---------- */
+function renderPhotos() {
+  const ps = [...A.vphotos].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  const used = A.vendors.filter(v => ps.some(p => p.vendorId === v.id));
+  $('#photoFilter').innerHTML = ps.length ? [['', '全部'], ...used.map(v => [v.id, v.trade || v.name])].map(([k, n]) => `<button class="tab" data-f="${esc(k)}" aria-pressed="${PF === k}">${esc(n)}</button>`).join('') : '';
+  $$('#photoFilter .tab').forEach(b => b.onclick = () => { PF = b.dataset.f; renderPhotos(); });
+  const list = ps.filter(p => !PF || p.vendorId === PF);
+  const tName = id => (A.tasks.find(t => t.id === id) || {}).title || '其他／現場狀況';
+  $('#photoList').innerHTML = list.length ? `<div class="grid">${list.map(p => `<div class="ph"><a href="${img(p.fileId, 2400)}" target="_blank" rel="noopener"><img src="${img(p.fileId, 700)}" loading="lazy" alt=""></a>
+    <div class="t"><b>${esc(vName(p.vendorId))}</b><br>${esc(tName(p.taskId))}<br><span class="muted">${esc(rocS(twDate(p.createdAt)))}</span>${p.caption ? '　' + esc(p.caption) : ''}</div>
+    <button class="x" data-dp="${esc(p.id)}">刪除</button></div>`).join('')}</div>` : '<div class="empty">廠商還沒有上傳照片</div>';
+  $$('#photoList [data-dp]').forEach(b => b.onclick = async e => { e.preventDefault(); if (!confirm('刪除這張照片？')) return; try { await post({ action: 'deleteVPhoto', id: b.dataset.dp }, '刪除中…'); await load(); } catch (err) { alert('失敗：' + err.message); } busy(false); });
+}
+
+/* ---------- 讀取 ---------- */
+async function load() {
+  busy(true, '讀取中…');
+  try {
+    const j = await apiGet({ action: 'vadmin', id: ID });
+    A = { vendors: j.vendors || [], tasks: j.tasks || [], notices: j.notices || [], vphotos: j.vphotos || [], vp: j.vp || {}, case: j.case };
+    document.title = `${j.case.name}｜下包廠商管理`; $('#caseName').textContent = j.case.name; $('#caseAddr').textContent = j.case.address || '';
+    $('#login').style.display = 'none'; $('#app').style.display = 'block'; $('#topnav').style.display = 'flex';
+    $('#nV').textContent = A.vendors.length || ''; $('#nT').textContent = A.tasks.length || ''; $('#nN').textContent = A.notices.length || ''; $('#nP').textContent = A.vphotos.length || '';
+    renderVendors(); renderTasks(); renderNotices(); renderVP(); renderPhotos();
+  } catch (err) {
+    if (/密碼/.test(err.message)) { setPass(''); showLogin('請輸入管理密碼。'); } else note('讀取失敗：' + err.message);
+  }
+  busy(false);
+}
+$('#logForm [name=date]').value = today();
+const h0 = location.hash.slice(1); if (['vendors', 'tasks', 'notices', 'model', 'photos'].includes(h0)) tab(h0);
+if (!ID) note('網址缺少案場代號，請從專案總覽的「下包廠商」按鈕進入。');
+else if (!configured()) note('尚未設定後端網址。');
+else if (PASS) load(); else showLogin();
+</script>
+</body>
+</html>

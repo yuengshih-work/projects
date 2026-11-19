@@ -1,0 +1,58 @@
+/* 下包廠商專區 */
+body{padding-bottom:calc(var(--navh) + env(safe-area-inset-bottom,0px) + 16px)}
+header.top .who{margin-top:8px;display:inline-block;background:rgba(246,242,234,.14);border-radius:99px;padding:2px 12px;font-size:14px}
+nav.bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);display:grid;grid-template-columns:repeat(4,1fr)}
+nav.bar button{height:var(--navh);background:none;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--muted);font-size:12px;cursor:pointer}
+nav.bar svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+nav.bar button[aria-selected="true"]{color:var(--accent);font-weight:700}
+section.pg{display:none;padding:20px 0}
+section.pg.on{display:block}
+
+.hot{border-left:4px solid var(--accent)}
+.hot .hn{padding:8px 0;border-bottom:1px solid var(--line)}
+.hot .hn:last-of-type{border-bottom:0}
+.hot .ht{font-weight:700;color:var(--accent);line-height:1.5}
+.hot .hb,.note2 .nb,.tnote,.contact{white-space:pre-wrap;font-size:16px;line-height:1.7}
+.contact a,.note2 a{color:var(--blue);font-weight:700}
+
+.task .th{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.task .tt{font-family:var(--serif);font-weight:900;font-size:19px;line-height:1.4}
+.task .tnote{margin-top:8px;padding:8px 10px;background:var(--paper);border-radius:8px;font-size:15px}
+.task .btn{margin-top:10px}
+.task.isdone{opacity:.7}
+.ready{margin-top:8px;font-size:15px;font-weight:700;line-height:1.5;padding:8px 10px;border-radius:8px}
+.ready.ok{color:var(--ok);background:#EAF4EE}
+.ready.wait{color:var(--warn);background:#FBF3E4}
+.donebox summary{cursor:pointer;color:var(--muted);font-size:15px;padding:8px 0}
+
+.pbar{height:10px;border-radius:5px;background:var(--line);overflow:hidden;margin:-2px 0 16px}
+.pbar b{display:block;height:100%;background:var(--ok);width:0}
+.mhd{font-family:var(--serif);font-weight:700;margin:16px 0 6px}
+.trow{display:grid;grid-template-columns:86px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.trow:first-child{padding-top:0}
+.trow:last-child{border-bottom:0;padding-bottom:0}
+.trow .td{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.4}
+.trow .trade{font-size:13px;color:var(--blue);font-weight:700}
+.trow .ti{font-size:15px;line-height:1.5}
+.trow.mine{background:#FBF3E4;margin:0 -10px;padding-left:10px;padding-right:10px;border-radius:8px}
+.trow[data-s="已完成"] .ti{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+
+.model .mh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.model .mh b{font-family:var(--serif);font-size:19px}
+.model .mdate{font-size:14px;font-weight:700;color:var(--accent)}
+.model .mnote{color:var(--muted);margin-top:2px}
+.model .frame{margin:10px 0;border:1px solid var(--line);border-radius:10px;overflow:hidden;height:min(62vh,520px);background:#f7f3ea}
+.model iframe{width:100%;height:100%;border:0;display:block}
+.mlog summary{cursor:pointer;color:var(--muted);font-size:14px;margin-top:10px}
+.mlog .ml{font-size:14px;padding:4px 0;border-bottom:1px dashed var(--line)}
+
+.note2 .nh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;line-height:1.5}
+.note2 .nb{margin-top:6px}
+.note2.imp{border-left:4px solid var(--accent)}
+
+.f label.ck{display:flex;align-items:center;gap:10px;font-size:16px;color:var(--ink)}
+.f label.ck input{width:22px;height:22px;flex:none;accent-color:var(--accent);padding:0}
+.newprev{display:flex;flex-wrap:wrap;gap:6px}
+.newprev:empty{display:none}
+.newprev img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
