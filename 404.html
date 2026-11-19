@@ -11,7 +11,7 @@
   var parts = location.pathname.split('/').filter(Boolean);
   var i = parts.indexOf('projects');
   var id = i >= 0 ? parts[i + 1] : '';
-  if (id && /^[a-z0-9][a-z0-9-]{1,30}$/i.test(id) && id !== 'site' && id !== 'assets') {
+  if (id && /^[a-z0-9][a-z0-9-]{1,30}$/i.test(id) && ['site', 'assets', 'vendor', 'models'].indexOf(id.toLowerCase()) < 0) {
     location.replace('/' + parts.slice(0, i + 1).join('/') + '/site/?id=' + encodeURIComponent(id.toLowerCase()) + location.hash);
   }
 })();

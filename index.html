@@ -246,6 +246,7 @@ function renderCard(c) {
     <div class="acts">
       <a class="btn sm" href="${esc(url)}" target="_blank" rel="noopener">開啟案場頁</a>
       <button class="btn ghost sm" data-copy="${esc(url)}">複製連結</button>
+      <a class="btn ghost sm" href="vendor/admin.html?id=${encodeURIComponent(c.id)}" target="_blank" rel="noopener">下包廠商</a>
       <button class="btn ghost sm" data-edit="${esc(c.id)}">設定</button>
     </div>`;
   el.querySelector('[data-copy]').onclick = async e => { try { await navigator.clipboard.writeText(e.target.dataset.copy); e.target.textContent = '已複製'; setTimeout(() => e.target.textContent = '複製連結', 1500); } catch (_) { prompt('複製這個連結', e.target.dataset.copy); } };
