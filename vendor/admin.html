@@ -83,13 +83,13 @@ header.top nav a,header.top nav button{color:#F6F2EA;opacity:.85;background:none
 
     <section class="pane" id="p-tasks">
       <div id="pending"></div>
-      <div class="toolbar"><span class="small muted" style="flex:1">所有廠商都看得到全案時程（不含金額）；工項備註只有負責廠商看得到。</span><button class="btn acc sm" id="addTask">＋ 新增工項</button></div>
+      <div class="toolbar"><span class="small muted" style="flex:1">廠商首頁會顯示整體進度條和目前施工中的工項（不含金額）；工項備註只有負責廠商看得到。</span><button class="btn acc sm" id="addTask">＋ 新增工項</button></div>
       <div class="chips2" id="taskFilter"></div>
       <div id="taskList"></div>
     </section>
 
     <section class="pane" id="p-notices">
-      <div class="toolbar"><span class="small muted" style="flex:1">可指定給全部或部分廠商；標「重要」會顯示在廠商頁最上方。</span><button class="btn acc sm" id="addNotice">＋ 新增注意事項</button></div>
+      <div class="toolbar"><span class="small muted" style="flex:1">顯示在廠商首頁，可指定給全部或部分廠商；標「重要」會排在最前面並用紅字。</span><button class="btn acc sm" id="addNotice">＋ 新增注意事項</button></div>
       <div id="noticeList"></div>
     </section>
 
@@ -218,7 +218,7 @@ function editVendor(v) {
     <div class="two"><label>聯絡人<input name="contact" value="${esc(v.contact)}"></label><label>電話<input name="phone" value="${esc(v.phone)}" inputmode="tel"></label></div>
     <label class="ck"><input type="checkbox" name="active" ${v.active !== false ? 'checked' : ''}>連結啟用中（取消勾選，廠商就打不開）</label>
     <div class="sec" style="border-top:1px solid var(--line);padding-top:12px">
-      <label class="ck"><input type="checkbox" name="showMoney" ${v.showMoney ? 'checked' : ''}>讓這家廠商看到自己的發包金額與請款進度</label>
+      <label class="ck"><input type="checkbox" name="showMoney" ${v.showMoney ? 'checked' : ''}>讓這家廠商看到「款項」分頁（自己的發包金額與請款進度）</label>
       <span class="hint">只會顯示這家廠商自己的金額；業主合約金額、其他廠商金額都不會顯示。</span></div>
     <label>發包金額<input name="amount" inputmode="numeric" value="${v.amount || ''}" placeholder="例：850000"></label>
     <div><div class="small muted" style="margin-bottom:6px">請款期別</div><div id="payRows">${payRows(pays)}</div><button type="button" class="btn ghost sm" id="addPay">＋ 新增一期</button><div class="small" id="paySum" style="margin-top:6px"></div></div>
@@ -310,7 +310,7 @@ function editNotice(n) {
   dialog(isNew ? '新增注意事項' : '編輯注意事項', `
     <label>標題 *<input name="title" value="${esc(n.title)}" placeholder="例：施工時間與噪音" required></label>
     <label>內容<textarea name="body" placeholder="例：平日 8:00～17:00，週日及國定假日不得施作敲打工程">${esc(n.body || '')}</textarea></label>
-    <label class="ck"><input type="checkbox" name="important" ${n.important ? 'checked' : ''}>重要（顯示在廠商頁最上方）</label>
+    <label class="ck"><input type="checkbox" name="important" ${n.important ? 'checked' : ''}>重要（排在最前面、紅字）</label>
     <div><div class="small muted" style="margin-bottom:4px">給哪些廠商看（都不勾＝全部廠商）</div>
       ${A.vendors.length ? `<div class="cks">${A.vendors.map(v => `<label><input type="checkbox" name="vid" value="${esc(v.id)}" ${(n.vendorIds || []).includes(v.id) ? 'checked' : ''}>${esc((v.trade ? v.trade + '・' : '') + v.name)}</label>`).join('')}</div>` : '<div class="hint">（還沒有廠商，會給全部廠商）</div>'}</div>`,
     async box => {

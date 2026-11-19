@@ -56,3 +56,20 @@ section.pg.on{display:block}
 .newprev{display:flex;flex-wrap:wrap;gap:6px}
 .newprev:empty{display:none}
 .newprev img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+
+/* 首頁進度卡 */
+.prog .prh{display:flex;justify-content:space-between;align-items:baseline}
+.prog .prh b{font-family:var(--serif);font-size:19px}
+.prog .pct{font-family:var(--serif);font-weight:900;font-size:24px;color:var(--ok)}
+.prog .pbar{margin:6px 0 12px}
+.prog .nowh{font-size:13px;color:var(--muted);margin-bottom:2px}
+.prog .nowi{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:16px;line-height:1.5}
+.prog .nowi:last-of-type{border-bottom:0}
+.prog .trade{font-size:13px;color:var(--blue);font-weight:700;min-width:2.6em}
+.prog .nexti{margin-top:8px;font-size:14px;color:var(--muted)}
+.notes1 .n1{padding:10px 0;border-bottom:1px solid var(--line)}
+.notes1 .n1:first-child{padding-top:0}
+.notes1 .n1:last-child{border-bottom:0;padding-bottom:0}
+.notes1 .nt1{font-weight:700;line-height:1.5}
+.notes1 .n1.imp .nt1{color:var(--accent)}
+.notes1 .nb{white-space:pre-wrap;font-size:15px;line-height:1.7;margin-top:2px}

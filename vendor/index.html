@@ -28,37 +28,19 @@
   <div id="gone" class="empty" style="margin-top:24px;display:none"></div>
 
   <div id="pages">
-  <!-- 我的工作 -->
+  <!-- 首頁 -->
   <section class="pg on" id="pg-mine">
-    <div id="hotNotes"></div>
-    <h3 style="margin-top:6px">我的工項</h3>
-    <div id="myTasks"></div>
-    <div id="contacts"></div>
-  </section>
-
-  <!-- 整體進度 -->
-  <section class="pg" id="pg-all">
-    <h2>整體進度</h2>
-    <p class="lead">全案各工種的大略時程，方便和其他廠商配合。日期以平安住現場安排為準。</p>
-    <div class="kpis">
-      <div class="kpi"><div class="k">整體完成</div><div class="v" id="kPct">—</div></div>
-      <div class="kpi"><div class="k">施工中工項</div><div class="v" id="kNow">—</div></div>
+    <div class="card prog">
+      <div class="prh"><b>整體進度</b><span class="pct" id="pct">—</span></div>
+      <div class="pbar"><b id="pbar"></b></div>
+      <div class="nowh">目前施工中</div>
+      <div id="nowList"></div>
     </div>
-    <div class="pbar"><b id="pbar"></b></div>
-
     <div id="modelBox"></div>
-
-    <h3>本週與接下來兩週</h3>
-    <div id="soon"></div>
-    <h3>全案時程</h3>
-    <div id="allTasks"></div>
-  </section>
-
-  <!-- 注意事項 -->
-  <section class="pg" id="pg-notes">
-    <h2>注意事項</h2>
-    <p class="lead">進場前請先看過；有更新會標示日期。</p>
-    <div id="noteList"></div>
+    <h3>我的工項</h3>
+    <div id="myTasks"></div>
+    <div id="noteBox"></div>
+    <div id="contacts"></div>
   </section>
 
   <!-- 照片 -->
@@ -91,9 +73,7 @@
 </main>
 
 <nav class="bar" role="tablist" id="nav">
-  <button data-p="mine" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M9 5h11M9 12h11M9 19h11"/><path d="M4 5l1 1 2-2M4 12l1 1 2-2M4 19l1 1 2-2"/></svg>我的工作</button>
-  <button data-p="all" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>整體進度</button>
-  <button data-p="notes" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.5"/></svg>注意事項</button>
+  <button data-p="mine" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>首頁</button>
   <button data-p="photos" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 7h4l2-3h4l2 3h4v13H4z"/><circle cx="12" cy="13" r="3.5"/></svg>照片</button>
   <button data-p="money" aria-selected="false" id="navMoney" style="display:none"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>款項</button>
 </nav>
@@ -109,7 +89,7 @@ let D = null;
 $('#firm').textContent = FIRM;
 
 /* ---------- nav ---------- */
-const PAGES = ['mine', 'all', 'notes', 'photos', 'money'];
+const PAGES = ['mine', 'photos', 'money'];
 $$('nav.bar button').forEach(b => b.onclick = () => go(b.dataset.p));
 function go(p) {
   if (!PAGES.includes(p) || (p === 'money' && !(D && D.me.showMoney))) p = 'mine';
@@ -118,7 +98,7 @@ function go(p) {
   history.replaceState(null, '', location.search + '#' + p);
 }
 
-/* ---------- 我的工作 ---------- */
+/* ---------- 首頁 ---------- */
 function taskCard(t, withBtn) {
   const r = readiness(t, D.tasks);
   return `<div class="card task ${t.status === '已完成' ? 'isdone' : ''}">
@@ -128,48 +108,29 @@ function taskCard(t, withBtn) {
     ${withBtn && t.status !== '已完成' ? `<button class="btn ghost sm" data-up="${esc(t.id)}">上傳這個工項的照片</button>` : ''}
   </div>`;
 }
+const nowRow = t => `<div class="nowi"><span class="trade">${esc(t.trade || t.vendor || '')}</span><span class="nt">${esc(t.title)}${t.area && !t.title.includes(t.area) ? '・' + esc(t.area) : ''}</span>${t.mine ? '<span class="pill solid">貴公司</span>' : ''}${t.status === '待驗收' ? '<span class="pill part">待驗收</span>' : ''}</div>`;
 function renderMine() {
-  const hot = D.notices.filter(n => n.important);
-  $('#hotNotes').innerHTML = hot.length ? `<div class="card hot"><b>重要注意事項</b>${hot.map(n => `<div class="hn"><div class="ht">${esc(n.title)}</div>${n.body ? `<div class="hb">${esc(n.body)}</div>` : ''}</div>`).join('')}
-    <button class="link" onclick="go('notes')">查看全部注意事項（${D.notices.length}）</button></div>` : '';
-  const mine = D.tasks.filter(t => t.mine);
-  const open = mine.filter(t => t.status !== '已完成'), done = mine.filter(t => t.status === '已完成');
-  $('#myTasks').innerHTML = mine.length ? open.map(t => taskCard(t, true)).join('') +
-    (done.length ? `<details class="donebox"><summary>已完成的工項（${done.length}）</summary>${done.map(t => taskCard(t)).join('')}</details>` : '')
-    : '<div class="empty">平安住還沒有排定貴公司的工項</div>';
-  $$('#myTasks [data-up]').forEach(b => b.onclick = () => { go('photos'); $('#upForm [name=task]').value = b.dataset.up; });
-  const ct = String(D.vp.contacts || '').trim();
-  $('#contacts').innerHTML = ct ? `<h3>現場聯絡窗口</h3><div class="card contact">${linkify(ct)}</div>` : '';
-}
-
-/* ---------- 整體進度 ---------- */
-function renderAll() {
-  const ts = D.tasks, done = ts.filter(t => t.status === '已完成').length;
-  const pct = ts.length ? Math.round(done / ts.length * 100) : 0;
-  $('#kPct').innerHTML = ts.length ? `${pct}%<span class="sub">${done}／${ts.length} 個工項完成</span>` : '—';
+  // 進度條＋目前在做什麼
+  const ts = D.tasks, done = ts.filter(t => t.status === '已完成').length, pct = ts.length ? Math.round(done / ts.length * 100) : 0;
+  $('#pct').textContent = ts.length ? pct + '%' : '—'; $('#pbar').style.width = pct + '%';
   const now = ts.filter(t => t.status === '施工中' || t.status === '待驗收');
-  $('#kNow').innerHTML = now.length ? `${now.length} 項<span class="sub">${esc([...new Set(now.map(t => t.trade || t.vendor))].join('、'))}</span>` : '無';
-  $('#pbar').style.width = pct + '%';
+  const next = ts.filter(t => t.status === '未開始' && t.start && t.start >= today()).sort((a, b) => a.start.localeCompare(b.start))[0];
+  $('#nowList').innerHTML = (now.length ? now.map(nowRow).join('') : '<div class="small muted">目前沒有施工中的工項</div>') +
+    (next ? `<div class="nexti">下一個：${esc(md(next.start))} ${esc(next.trade || next.vendor || '')}・${esc(next.title)}${next.mine ? '（貴公司）' : ''}</div>` : '');
   renderModel($('#modelBox'), D.vp);
 
-  const soon = upcoming(ts, 21);
-  $('#soon').innerHTML = soon.length ? `<div class="card">${soon.map(rowHtml).join('')}</div>` : '<div class="empty">這三週沒有排定的工項</div>';
-  $('#allTasks').innerHTML = ts.length ? byMonth(ts).map(g => `<div class="mhd">${esc(g.label)}</div><div class="card">${g.items.map(rowHtml).join('')}</div>`).join('') : '<div class="empty">尚未排定時程</div>';
-}
-function rowHtml(t) {
-  return `<div class="trow ${t.mine ? 'mine' : ''}" data-s="${esc(t.status)}">
-    <div class="td">${esc(range(t, true))}</div>
-    <div class="tm"><div><span class="trade">${esc(t.trade || t.vendor || '未指定')}</span>${t.mine ? '<span class="pill solid" style="margin-left:6px">貴公司</span>' : ''}</div>
-      <div class="ti">${esc(t.title)}${t.area ? `<span class="muted">・${esc(t.area)}</span>` : ''}</div></div>
-    <div class="ts">${statusPill(t.status)}</div></div>`;
-}
+  const mine = D.tasks.filter(t => t.mine);
+  const open = mine.filter(t => t.status !== '已完成'), fin = mine.filter(t => t.status === '已完成');
+  $('#myTasks').innerHTML = mine.length ? open.map(t => taskCard(t, true)).join('') +
+    (fin.length ? `<details class="donebox"><summary>已完成的工項（${fin.length}）</summary>${fin.map(t => taskCard(t)).join('')}</details>` : '')
+    : '<div class="empty">平安住還沒有排定貴公司的工項</div>';
+  $$('#myTasks [data-up]').forEach(b => b.onclick = () => { go('photos'); $('#upForm [name=task]').value = b.dataset.up; });
 
-/* ---------- 注意事項 ---------- */
-function renderNotes() {
-  const list = [...D.notices].sort((a, b) => (b.important - a.important) || (+a.sort || 0) - (+b.sort || 0) || String(b.updatedAt).localeCompare(String(a.updatedAt)));
-  $('#noteList').innerHTML = list.length ? list.map(n => `<div class="card note2 ${n.important ? 'imp' : ''}">
-    <div class="nh"><b>${n.important ? '<span class="pill solid">重要</span> ' : ''}${esc(n.title)}</b><span class="tiny muted">${esc(rocS(n.updatedAt))} 更新</span></div>
-    ${n.body ? `<div class="nb">${linkify(n.body)}</div>` : ''}</div>`).join('') : '<div class="empty">目前沒有注意事項</div>';
+  const ns = [...D.notices].sort((a, b) => (b.important - a.important) || (+a.sort || 0) - (+b.sort || 0) || String(b.updatedAt).localeCompare(String(a.updatedAt)));
+  $('#noteBox').innerHTML = ns.length ? `<h3>注意事項</h3><div class="card notes1">${ns.map(n => `<div class="n1 ${n.important ? 'imp' : ''}">
+    <div class="nt1">${n.important ? '<span class="pill solid">重要</span> ' : ''}${esc(n.title)}</div>${n.body ? `<div class="nb">${linkify(n.body)}</div>` : ''}</div>`).join('')}</div>` : '';
+  const ct = String(D.vp.contacts || '').trim();
+  $('#contacts').innerHTML = ct ? `<h3>現場聯絡窗口</h3><div class="card contact">${linkify(ct)}</div>` : '';
 }
 
 /* ---------- 照片 ---------- */
@@ -210,7 +171,7 @@ $('#upForm').onsubmit = async e => {
 /* ---------- 款項 ---------- */
 function renderMoney() {
   const m = D.me; $('#navMoney').style.display = m.showMoney ? '' : 'none';
-  $('#nav').style.gridTemplateColumns = `repeat(${m.showMoney ? 5 : 4},1fr)`;
+  $('#nav').style.gridTemplateColumns = `repeat(${m.showMoney ? 3 : 2},1fr)`;
   if (!m.showMoney) return;
   const ps = m.pays || [], paid = ps.filter(p => p.paid).reduce((a, p) => a + (+p.amt || 0), 0);
   const sum = ps.reduce((a, p) => a + (+p.amt || 0), 0);
@@ -233,7 +194,7 @@ async function load() {
   document.title = `${j.case.name}｜下包廠商專區`;
   $('#caseName').textContent = j.case.name; $('#caseAddr').textContent = j.case.address || '';
   $('#who').textContent = `${j.me.name}${j.me.trade ? '（' + j.me.trade + '）' : ''}`;
-  renderMine(); renderAll(); renderNotes(); renderPhotos(); renderMoney();
+  renderMine(); renderPhotos(); renderMoney();
 }
 function fail(msg) {
   $('#caseName').textContent = '無法開啟'; $('#pages').style.display = 'none'; $('#nav').style.display = 'none';
