@@ -174,7 +174,7 @@ function renderNotes() {
 
 /* ---------- 照片 ---------- */
 function renderPhotos() {
-  const mine = D.tasks.filter(t => t.mine);
+  const mine = D.tasks.filter(t => t.mine && t.status !== '已完成');   // 已完成的工項不列入上傳選單
   const sel = $('#upForm [name=task]'), cur = sel.value;
   sel.innerHTML = mine.map(t => `<option value="${esc(t.id)}">${esc(t.title)}${t.area ? '・' + esc(t.area) : ''}</option>`).join('') + '<option value="">其他／現場狀況</option>';
   if (cur !== '' && [...sel.options].some(o => o.value === cur)) sel.value = cur;
