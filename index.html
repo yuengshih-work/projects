@@ -114,6 +114,7 @@ main{padding:18px 0 40px}
     <div class="toolbar" style="margin-top:18px">
       <div class="chips" id="filters"></div>
       <button class="btn ghost sm" id="reload">重新整理</button>
+      <button class="btn ghost sm" id="formsBtn">客戶表單<span class="badge" id="formsBadge" style="display:none"></span></button>
       <button class="btn acc sm" id="addCase">＋ 新增案場</button>
     </div>
     <div class="cases" id="cases"></div>
@@ -132,6 +133,15 @@ main{padding:18px 0 40px}
       <button type="submit" class="btn acc">儲存</button>
     </div>
   </form>
+</dialog>
+
+<dialog class="dlg" id="fdlg">
+  <div class="dh"><b>客戶表單</b><button type="button" class="x-close" id="fClose" aria-label="關閉">×</button></div>
+  <div class="db">
+    <p class="small muted" style="margin:0 0 10px">客人從 <a href="https://yuengshih-work.github.io/forms/" target="_blank" rel="noopener">平安住客戶表單</a> 送出的漏水評估、裝潢需求清單。按「開案」會新增案場並帶入客人資料；同一支電話的其他表單會一起連結。</p>
+    <div class="chips" id="fFilters" style="margin-bottom:10px"></div>
+    <div id="fList"></div>
+  </div>
 </dialog>
 
 <div class="spin" id="spin"><div id="spinTxt">處理中…</div></div>
@@ -165,6 +175,7 @@ async function load() {
     $('#login').style.display = 'none'; $('#app').style.display = 'block'; $('#topnav').style.display = 'flex';
     render();
     CASES.filter(c => c.kind === 'external' && c.api).forEach(loadExt);
+    loadForms();
   } catch (err) {
     if (/密碼/.test(err.message)) { setPass(''); showLogin('密碼已變更或失效，請重新登入。'); }
     else { const n = $('#sysNote'); n.style.display = 'block'; n.textContent = '讀取失敗：' + err.message; if (!PASS) showLogin(); }
@@ -253,6 +264,47 @@ function renderCard(c) {
 }
 
 $('#reload').onclick = load;
+
+/* ---------- 客戶表單 ---------- */
+let FORMS = [], FFILTER = '新表單';
+async function loadForms() {
+  try { const j = await apiGet({ action: 'forms' }); FORMS = j.forms || []; }
+  catch (err) { FORMS = []; console.warn('客戶表單讀取失敗', err); }
+  const n = FORMS.filter(f => f.status === '新表單').length;
+  $('#formsBadge').style.display = n ? 'inline-block' : 'none'; $('#formsBadge').textContent = n;
+  if ($('#fdlg').open) renderForms();
+}
+function renderForms() {
+  const groups = [...FORM_STATUS, '全部'];
+  const cnt = g => FORMS.filter(f => g === '全部' || f.status === g).length;
+  $('#fFilters').innerHTML = groups.map(g => `<button class="chip" data-f="${g}" aria-pressed="${FFILTER === g}">${g}　${cnt(g)}</button>`).join('');
+  $$('#fFilters .chip').forEach(b => b.onclick = () => { FFILTER = b.dataset.f; renderForms(); });
+  const list = FORMS.filter(f => FFILTER === '全部' || f.status === FFILTER);
+  const caseName = id => (CASES.find(c => c.id === id) || {}).name || id;
+  $('#fList').innerHTML = list.length ? list.map(f => `<div class="fm ${f.status === '新表單' ? 'new' : ''}">
+      ${formHead(f)}
+      <details><summary>看填寫內容${(f.files || []).length ? `與照片（${f.files.length} 張）` : ''}</summary>${formBody(f)}</details>
+      <div class="facts">
+        ${f.status === '已開案' && f.caseId
+          ? `<span class="small">已連結：<a href="${esc(caseUrl(CASES.find(c => c.id === f.caseId) || { id: f.caseId }))}" target="_blank" rel="noopener">${esc(caseName(f.caseId))}</a></span>
+             <button class="btn ghost sm" data-unlink="${esc(f.id)}">取消連結</button>`
+          : `<button class="btn acc sm" data-open="${esc(f.id)}">開案</button>
+             <select data-link="${esc(f.id)}"><option value="">連結到現有案場…</option>${CASES.filter(c => c.status !== '已結案').map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('')}</select>
+             <select data-st="${esc(f.id)}">${FORM_STATUS.filter(x => x !== '已開案').map(x => `<option ${f.status === x ? 'selected' : ''}>${x}</option>`).join('')}</select>`}
+      </div></div>`).join('')
+    : `<div class="empty">${FORMS.length ? '這個分類沒有表單' : '還沒有客人送出表單'}</div>`;
+  const act = async (body, t) => { busy(true, t); try { await apiPost(body); await loadForms(); } catch (err) { alert('失敗：' + err.message); } busy(false); };
+  $$('#fList [data-st]').forEach(sel => sel.onchange = () => act({ action: 'formStatus', id: sel.dataset.st, status: sel.value }, '更新中…'));
+  $$('#fList [data-link]').forEach(sel => sel.onchange = () => {
+    if (!sel.value) return; const c = CASES.find(x => x.id === sel.value);
+    if (!confirm(`把這張表單連結到「${c.name}」？`)) { sel.value = ''; return; }
+    act({ action: 'linkForm', id: sel.dataset.link, caseId: sel.value }, '連結中…');
+  });
+  $$('#fList [data-unlink]').forEach(b => b.onclick = () => confirm('取消這張表單和案場的連結？') && act({ action: 'linkForm', id: b.dataset.unlink, caseId: '' }, '更新中…'));
+  $$('#fList [data-open]').forEach(b => b.onclick = () => { const f = FORMS.find(x => x.id === b.dataset.open); $('#fdlg').close(); editCase(null, f); });
+}
+$('#formsBtn').onclick = () => { renderForms(); $('#fdlg').showModal(); loadForms(); };
+$('#fClose').onclick = () => $('#fdlg').close();
 $('#addCase').onclick = () => editCase(null);
 
 /* ---------- 案場設定編輯 ---------- */
@@ -274,11 +326,19 @@ const splitList = s => String(s || '').split(/[、,，\n]+/).map(x => x.trim()).
 const newKey = () => 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 let EDIT = null;
 
-function editCase(c) {
+function editCase(c, fromForm) {
   const isNew = !c;
   EDIT = isNew ? { isNew: true, id: '', name: '', address: '', status: '準備中', kind: 'template', url: '', api: '', sort: CASES.length + 1, config: LONGDE_TPL() }
                : { ...clone(c), isNew: false, config: { netTotal: 0, taxRate: 0.05, areas: [], stages: [], pays: [], ...clone(c.config || {}) } };
   EDIT.config.stages.forEach(s => s.k = s.k || newKey());
+  if (fromForm) {   // 從客戶表單開案：帶入客人資料，並連結同一支電話的表單
+    const digits = p => String(p || '').replace(/\D/g, '');
+    EDIT.name = (fromForm.address ? fromForm.address.replace(/^(高雄市|台南市|屏東縣|台中市|臺南市|臺中市)/, '') + ' ' : '') + (fromForm.type === 'leak' ? '漏水修繕工程' : '整修工程');
+    EDIT.address = fromForm.address || '';
+    EDIT.config.client = fromForm.name + ' ' + fromForm.phone;
+    EDIT.formChoices = FORMS.filter(f => f.status !== '已開案' && digits(f.phone) === digits(fromForm.phone));
+    EDIT.linkForms = EDIT.formChoices.map(f => f.id);
+  }
   $('#dlgTitle').textContent = isNew ? '新增案場' : '案場設定';
   $('#delCase').style.display = isNew ? 'none' : 'inline-flex';
   drawEditor();
@@ -290,6 +350,8 @@ function drawEditor() {
   const otherCases = CASES.filter(x => x.id !== E.id);
   $('#dlgBody').innerHTML = `
     ${E.isNew && otherCases.length ? `<label>從現有案場複製階段與付款設定（選填）<select id="copyFrom"><option value="">— 使用預設範本 —</option>${otherCases.map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('')}</select></label>` : ''}
+    ${(EDIT.formChoices || []).length ? `<div class="note ok" style="margin:0"><b>連結客戶表單</b>（開案後可在案場頁看到客人填的內容與照片）
+      <div class="flink">${EDIT.formChoices.map(f => `<label><input type="checkbox" data-lf="${esc(f.id)}" ${EDIT.linkForms.includes(f.id) ? 'checked' : ''}>${esc(FORM_TYPE[f.type] || f.type)}　${esc(f.id)}　${esc(f.name)}</label>`).join('')}</div></div>` : ''}
     <label>案場名稱 *<input name="name" value="${esc(E.name)}" placeholder="例：明誠路透天整修工程" required></label>
     <label>案場代號 *（英文小寫、數字、-；會成為網址，建立後不能改）
       <input name="id" value="${esc(E.id)}" ${E.isNew ? '' : 'disabled'} placeholder="例：mingcheng" autocapitalize="off" spellcheck="false">
@@ -337,6 +399,7 @@ function drawEditor() {
     <label style="margin-top:12px">排序（數字小的排前面）<input name="sort" inputmode="numeric" value="${esc(E.sort || '')}"></label>`;
 
   const B = $('#dlgBody');
+  B.querySelectorAll('[data-lf]').forEach(x => x.onchange = () => { E.linkForms = $$('[data-lf]', B).filter(y => y.checked).map(y => y.dataset.lf); });
   const bindVal = (name, fn) => { const el = B.querySelector(`[name="${name}"]`); if (el) el.addEventListener('input', () => fn(el.value)); };
   bindVal('name', v => E.name = v); bindVal('address', v => E.address = v); bindVal('client', v => cf.client = v);
   bindVal('url', v => E.url = v); bindVal('api', v => E.api = v); bindVal('sort', v => E.sort = v);
@@ -427,7 +490,7 @@ $('#caseForm').onsubmit = async e => {
   if (cf.pays.length && Math.abs(sum - 100) >= 0.001 && !confirm(`付款比例合計 ${sum}%，不是 100%，仍要儲存？`)) return;
   busy(true, '儲存中…');
   try {
-    await apiPost({ action: 'saveCase', case: { id: E.id, isNew: E.isNew, name: E.name, address: E.address, status: E.status, kind: E.kind, url: E.url, api: E.api, sort: E.sort, config: cf } });
+    await apiPost({ action: 'saveCase', case: { id: E.id, isNew: E.isNew, name: E.name, address: E.address, status: E.status, kind: E.kind, url: E.url, api: E.api, sort: E.sort, config: cf, linkForms: E.linkForms || [] } });
     $('#dlg').close(); await load();
   } catch (err) { alert('儲存失敗：' + err.message); }
   busy(false);

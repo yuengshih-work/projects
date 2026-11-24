@@ -95,6 +95,30 @@ async function fileData(f) {
   return await shrink(f, 2200);
 }
 
+/* ---------- 客戶表單（forms repo 送來的裝潢需求清單、漏水評估） ---------- */
+const FORMS_URL = 'https://yuengshih-work.github.io/forms/';
+const FORM_TYPE = { reno: '裝潢需求', leak: '漏水評估' };
+const FORM_STATUS = ['新表單', '已聯絡', '已開案', '不處理'];
+const telHref = p => 'tel:' + String(p || '').replace(/[^\d+]/g, '');
+// 表單內容：依段落列出客人填的項目，加上照片
+function formBody(f) {
+  let sec = '', html = '<dl class="fans">';
+  (f.answers || []).forEach(a => {
+    if (a.s !== sec) { sec = a.s; html += `<dt class="fsec">${esc(sec)}</dt>`; }
+    html += `<dt>${esc(a.l)}</dt><dd>${esc(a.v)}</dd>`;
+  });
+  html += '</dl>';
+  if ((f.files || []).length) html += '<div class="grid fpics">' + f.files.map(x =>
+    `<div class="ph"><a href="https://drive.google.com/file/d/${encodeURIComponent(x.id)}/view" target="_blank" rel="noopener"><img loading="lazy" src="${img(x.id, 600)}" alt=""></a><div class="t">${esc(x.label || '')}</div></div>`).join('') + '</div>';
+  return html;
+}
+function formHead(f) {
+  return `<div class="fh"><div><span class="pill ${f.type === 'leak' ? 'blue' : 'go'}">${esc(FORM_TYPE[f.type] || f.type)}</span>
+      <b class="fname">${esc(f.name)}</b> <a href="${telHref(f.phone)}">${esc(f.phone)}</a></div>
+    <span class="tiny muted">${esc(f.id)}　${esc(rocS(f.createdAt))}</span></div>
+    ${f.address ? `<div class="small muted">${esc(f.address)}</div>` : ''}`;
+}
+
 /* ---------- 案場網址 ---------- */
 function siteBase() { const u = new URL(location.href); const p = u.pathname.replace(/[^/]*$/, ''); return u.origin + p.replace(/site\/$/, ''); }
 const caseUrl = c => c.kind === 'external' ? c.url : siteBase() + 'site/?id=' + encodeURIComponent(c.id);

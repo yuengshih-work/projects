@@ -7,6 +7,11 @@
  * 3. 專案設定 → 指令碼屬性 → 新增 ADMIN_PASS（平安住管理密碼）→ 儲存指令碼屬性
  * 4. 部署 → 新增部署作業 → 網頁應用程式：執行身分「我」、存取權「所有人」
  * 5. 把 /exec 結尾的網址貼到 GitHub projects repo 的 assets/common.js 的 API
+ *
+ * 客戶表單（forms repo：裝潢需求清單、漏水評估）也送到這個後端：
+ * - 客人送出不需密碼（action: submitForm），資料進「forms」分頁，照片存到「客戶表單」資料夾
+ * - 新表單會寄 Email 通知；收件人預設是部署帳號，可在指令碼屬性加 NOTIFY_EMAIL（多個用逗號分隔）
+ * - 更新這版後：在編輯器執行一次 setup() 授權寄信，再「管理部署作業 → 編輯 → 新版本 → 部署」
  */
 
 const P = PropertiesService.getScriptProperties();
@@ -15,9 +20,12 @@ const SHEETS = {
   photos:  ['id', 'caseId', 'cat', 'area', 'caption', 'fileId', 'createdAt'],
   updates: ['id', 'caseId', 'date', 'stage', 'title', 'note', 'photoIds', 'createdAt'],
   docs:    ['id', 'caseId', 'type', 'title', 'date', 'files', 'createdAt'],
+  forms:   ['id', 'type', 'name', 'phone', 'email', 'address', 'answers', 'files', 'status', 'caseId', 'note', 'createdAt', 'updatedAt'],
   log:     ['time', 'action', 'caseId', 'detail']
 };
-const JSON_COLS = { config: 1, state: 1, photoIds: 1, files: 1 };
+const JSON_COLS = { config: 1, state: 1, photoIds: 1, files: 1, answers: 1 };
+const FORM_TYPES = { reno: { name: '裝潢需求思考清單', prefix: 'R' }, leak: { name: '漏水評估', prefix: 'L' } };
+const FORM_STATUS = ['新表單', '已聯絡', '已開案', '不處理'];
 
 /* ================= setup ================= */
 function setup() {
@@ -39,6 +47,7 @@ function setup() {
     P.setProperty('FOLDER_ID', f.getId());
   }
   if (!rows_('cases').length) seedLongde_();
+  try { MailApp.getRemainingDailyQuota(); } catch (e) { }   // 觸發寄信授權（客戶表單通知用）
   if (!P.getProperty('ADMIN_PASS')) Logger.log('⚠ 請到「專案設定 → 指令碼屬性」新增 ADMIN_PASS');
   Logger.log('試算表：' + ss.getUrl());
   Logger.log('資料夾：' + DriveApp.getFolderById(P.getProperty('FOLDER_ID')).getUrl());
@@ -81,6 +90,9 @@ function doGet(e) {
       case 'hub':
         if (!admin) throw new Error('需要管理密碼');
         return out_(getHub_());
+      case 'forms':
+        if (!admin) throw new Error('需要管理密碼');
+        return out_({ ok: true, forms: rows_('forms').reverse() });
       default: throw new Error('未知的 action');
     }
   } catch (err) { return out_({ ok: false, error: err.message }); }
@@ -90,6 +102,11 @@ function doPost(e) {
   let b = {};
   try {
     b = JSON.parse(e.postData.contents || '{}');
+    if (b.action === 'submitForm') {            // 客戶表單：公開送出，不需密碼
+      const lock = LockService.getScriptLock(); lock.waitLock(30000);
+      try { return out_(Object.assign({ ok: true }, submitForm_(b.form || {}))); }
+      finally { lock.releaseLock(); }
+    }
     if (!isAdmin_(b.pass)) throw new Error('管理密碼錯誤');
     if (b.action === 'checkAdmin') return out_({ ok: true });
     const lock = LockService.getScriptLock(); lock.waitLock(20000);
@@ -167,6 +184,18 @@ function handle_(b) {
       const d = rows_('docs').find(r => r.id === b.id); if (!d) throw new Error('找不到文件');
       (d.files || []).forEach(f => trash_(f.id)); deleteRow_('docs', 'id', b.id); return {};
     }
+    case 'formStatus': {
+      if (FORM_STATUS.indexOf(b.status) < 0) throw new Error('狀態不正確');
+      const patch = { status: b.status, updatedAt: new Date().toISOString() };
+      if (b.note != null) patch.note = String(b.note).slice(0, 1000);
+      if (b.status !== '已開案') patch.caseId = '';
+      updateRow_('forms', 'id', b.id, patch); return {};
+    }
+    case 'linkForm': {
+      if (b.caseId) findCase_(b.caseId);
+      updateRow_('forms', 'id', b.id, { caseId: b.caseId || '', status: b.caseId ? '已開案' : '已聯絡', updatedAt: new Date().toISOString() });
+      return {};
+    }
     default: throw new Error('未知的 action：' + b.action);
   }
 }
@@ -180,7 +209,8 @@ function getCase_(id, admin) {
     ok: true, admin: admin, case: pub_(c),
     photos: rows_('photos').filter(r => r.caseId === c.id),
     updates: rows_('updates').filter(r => r.caseId === c.id),
-    docs: rows_('docs').filter(r => r.caseId === c.id)
+    docs: rows_('docs').filter(r => r.caseId === c.id),
+    forms: admin ? rows_('forms').filter(r => r.caseId === c.id) : []   // 客戶表單只給平安住看
   };
 }
 
@@ -221,6 +251,9 @@ function saveCase_(c) {
   if (c.isNew && exist) throw new Error('代號「' + id + '」已被使用');
   if (exist) updateRow_('cases', 'id', id, data);
   else append_('cases', Object.assign({ id: id, state: {}, createdAt: now }, data));
+  (Array.isArray(c.linkForms) ? c.linkForms : []).forEach(fid => {   // 開案時一併連結客戶表單
+    if (findRow_('forms', 'id', fid)) updateRow_('forms', 'id', fid, { caseId: id, status: '已開案', updatedAt: now });
+  });
   return { id: id };
 }
 
@@ -228,6 +261,7 @@ function deleteCase_(id) {
   const c = findCase_(id);
   if (rows_('photos').some(r => r.caseId === id) || rows_('updates').some(r => r.caseId === id) || rows_('docs').some(r => r.caseId === id))
     throw new Error('此案場已有照片、紀錄或文件，不能刪除；請改把狀態設為「已結案」');
+  rows_('forms').filter(r => r.caseId === c.id).forEach(f => updateRow_('forms', 'id', f.id, { caseId: '', status: '已聯絡' }));
   deleteRow_('cases', 'id', c.id); return {};
 }
 
@@ -235,6 +269,59 @@ function findCase_(id) {
   const c = rows_('cases').find(r => r.id === id);
   if (!c) throw new Error('找不到案場：' + id);
   return c;
+}
+
+/* ================= 客戶表單 ================= */
+function submitForm_(f) {
+  if (f.hp) return { id: 'OK' };                                   // 機器人陷阱欄位
+  const T = FORM_TYPES[f.type]; if (!T) throw new Error('表單類型不正確');
+  const s = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
+  const name = s(f.name, 40), phone = s(f.phone, 20).replace(/[^\d+]/g, '');
+  if (!name) throw new Error('請填姓名');
+  if (phone.replace(/\D/g, '').length < 8) throw new Error('請填正確的電話');
+  const cache = CacheService.getScriptCache(), ck = 'form_' + phone, n = +(cache.get(ck) || 0);
+  if (n >= 5) throw new Error('同一支電話一小時內送出太多次，請稍後再試或直接來電 07-9623551 分機555');
+  const answers = (Array.isArray(f.answers) ? f.answers : []).slice(0, 300)
+    .map(a => ({ s: s(a.s, 40), l: s(a.l, 80), v: s(a.v, 1000) })).filter(a => a.l && a.v);
+  const photos = (Array.isArray(f.photos) ? f.photos : []).slice(0, 8);
+
+  const sh = sh_('forms'), day = Utilities.formatDate(new Date(), 'Asia/Taipei', 'yyyyMMdd');
+  const pre = T.prefix + day + '-';
+  const seq = rows_('forms').filter(r => String(r.id).indexOf(pre) === 0).length + 1;
+  const id = pre + String(seq).padStart(2, '0');
+
+  const files = [];
+  if (photos.length) {
+    const folder = formFolder_(id + '_' + name);
+    photos.forEach((p, i) => {
+      const m = String(p.data || '').match(/^data:(image\/(?:jpeg|png|webp));base64,(.*)$/);
+      if (!m || m[2].length > 6 * 1024 * 1024) return;
+      const label = s(p.label, 20) || ('照片' + (i + 1));
+      const file = folder.createFile(Utilities.newBlob(Utilities.base64Decode(m[2]), m[1], label + '.jpg'));
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      files.push({ id: file.getId(), label: label });
+    });
+  }
+  const now = new Date().toISOString();
+  append_('forms', { id: id, type: f.type, name: name, phone: phone, email: s(f.email, 80), address: s(f.address, 160),
+    answers: answers, files: files, status: '新表單', caseId: '', note: '', createdAt: now, updatedAt: now });
+  cache.put(ck, String(n + 1), 3600);
+  notifyForm_(T.name, id, name, phone, s(f.address, 160), answers, files.length);
+  return { id: id };
+}
+function formFolder_(sub) {
+  const root = DriveApp.getFolderById(P.getProperty('FOLDER_ID'));
+  const it = root.getFoldersByName('客戶表單'), base = it.hasNext() ? it.next() : root.createFolder('客戶表單');
+  return base.createFolder(sub);
+}
+function notifyForm_(typeName, id, name, phone, address, answers, photoCount) {
+  try {
+    const to = P.getProperty('NOTIFY_EMAIL') || Session.getEffectiveUser().getEmail(); if (!to) return;
+    let sec = '', body = typeName + '　編號 ' + id + '\n姓名：' + name + '\n電話：' + phone + '\n地址：' + (address || '—') + '\n照片：' + photoCount + ' 張\n';
+    answers.forEach(a => { if (a.s !== sec) { sec = a.s; body += '\n【' + sec + '】\n'; } body += a.l + '：' + a.v + '\n'; });
+    body += '\n到專案管理總覽的「客戶表單」查看與開案：https://yuengshih-work.github.io/projects/';
+    MailApp.sendEmail(to, '【平安住】新的' + typeName + '：' + name + ' ' + phone, body);
+  } catch (e) { log_('notifyFail', id, e.message); }
 }
 
 /* ================= 檔案 ================= */
@@ -255,7 +342,13 @@ function trash_(fileId) { try { DriveApp.getFileById(fileId).setTrashed(true); }
 
 /* ================= 試算表工具 ================= */
 function ss_() { return SpreadsheetApp.openById(P.getProperty('SHEET_ID')); }
-function sh_(name) { const s = ss_().getSheetByName(name); if (!s) throw new Error('缺少分頁 ' + name + '，請重新執行 setup()'); return s; }
+function sh_(name) {
+  const ss = ss_(); let s = ss.getSheetByName(name);
+  if (!s && SHEETS[name]) {                      // 新增的分頁（如 forms）自動建立
+    s = ss.insertSheet(name); s.getRange(1, 1, 1, SHEETS[name].length).setValues([SHEETS[name]]).setFontWeight('bold'); s.setFrozenRows(1);
+  }
+  if (!s) throw new Error('缺少分頁 ' + name + '，請重新執行 setup()'); return s;
+}
 function rows_(name) {
   const sh = sh_(name), v = sh.getDataRange().getValues(), head = v.shift() || [];
   return v.filter(r => r[0] !== '').map(r => {
@@ -273,7 +366,10 @@ function cell_(h, v) { return JSON_COLS[h] ? JSON.stringify(v == null ? '' : v) 
 function append_(name, o) {
   const sh = sh_(name);
   sh.appendRow(SHEETS[name].map(h => cell_(h, o[h])));
-  if (name !== 'log') { const r = sh.getLastRow(); const di = SHEETS[name].indexOf('date'); if (di >= 0) sh.getRange(r, di + 1).setNumberFormat('@').setValue(o.date || ''); }
+  if (name !== 'log') {   // 日期、電話存成文字，避免被轉成日期或吃掉開頭的 0
+    const r = sh.getLastRow();
+    ['date', 'phone'].forEach(h => { const di = SHEETS[name].indexOf(h); if (di >= 0) sh.getRange(r, di + 1).setNumberFormat('@').setValue(o[h] || ''); });
+  }
 }
 function findRow_(name, key, val) {
   const sh = sh_(name), col = SHEETS[name].indexOf(key) + 1;

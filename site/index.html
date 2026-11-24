@@ -71,6 +71,10 @@ body.admin .admtag{display:block}
     <div class="card" id="pays"></div>
     <h3>最新施工紀錄</h3>
     <div id="latest"></div>
+    <div class="adm" id="formsWrap">
+      <h3>客戶表單 <span class="pill">只有平安住看得到</span></h3>
+      <div id="formsBox"></div>
+    </div>
   </section>
 
   <!-- 合約 -->
@@ -187,7 +191,7 @@ body.admin .admtag{display:block}
 <script src="../assets/common.js"></script>
 <script>
 const ID = (new URLSearchParams(location.search).get('id') || '').trim().toLowerCase();
-const D = { case: null, cfg: {}, state: { stages: {}, checks: {}, paid: {}, fields: {} }, docs: [], photos: [], updates: [] };
+const D = { case: null, cfg: {}, state: { stages: {}, checks: {}, paid: {}, fields: {} }, docs: [], photos: [], updates: [], forms: [] };
 let ADMIN = false;
 $('#firm').textContent = FIRM;
 
@@ -456,14 +460,19 @@ function renderAll() {
   const cur = $('#updForm [name=stage]').value;
   fillSel($('#updForm [name=stage]'), (D.cfg.stages || []).map(s => s.n + (s.d ? '｜' + s.d : '')).concat(['其他']));
   if (cur) $('#updForm [name=stage]').value = cur;
-  renderFields(); renderDocs(); renderStages(); renderBefore(); renderPlans(); renderPolicy(); renderUpdates();
+  renderFields(); renderDocs(); renderStages(); renderBefore(); renderPlans(); renderPolicy(); renderUpdates(); renderForms();
+}
+function renderForms() {
+  $('#formsBox').innerHTML = D.forms.length
+    ? D.forms.map(f => `<div class="fm">${formHead(f)}<details ${D.forms.length === 1 ? 'open' : ''}><summary>看填寫內容${(f.files || []).length ? `與照片（${f.files.length} 張）` : ''}</summary>${formBody(f)}</details></div>`).join('')
+    : `<div class="empty">沒有連結客戶表單。可以在專案管理總覽的「客戶表單」把客人填的表單連結到這個案場。</div>`;
 }
 async function load() {
   const j = await apiGet({ action: 'case', id: ID });
   if (j.redirect) { location.replace(j.redirect); return; }
   D.case = j.case; D.cfg = j.case.config || {};
   D.state = { stages: {}, checks: {}, paid: {}, fields: {}, ...(j.case.state || {}) };
-  D.docs = j.docs || []; D.photos = j.photos || []; D.updates = j.updates || [];
+  D.docs = j.docs || []; D.photos = j.photos || []; D.updates = j.updates || []; D.forms = j.forms || [];
   if (PASS && !j.admin) { setPass(''); setAdmin(false); } else if (j.admin && !ADMIN) setAdmin(true);
   renderAll();
 }

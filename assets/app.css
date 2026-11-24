@@ -127,3 +127,20 @@ dialog.dlg .dh b{font-family:var(--serif);font-size:19px}
 dialog.dlg .db{padding:16px}
 dialog.dlg .df{position:sticky;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:12px 16px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .x-close{background:none;border:0;font-size:26px;line-height:1;color:var(--muted);cursor:pointer;padding:4px 8px}
+
+/* 客戶表單 */
+.fm{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:var(--card)}
+.fm.new{border-left:4px solid var(--accent)}
+.fm .fh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.fm .fname{font-size:17px;margin:0 4px}
+.fm details summary{cursor:pointer;color:var(--accent);font-size:14px;margin-top:6px}
+.fm .facts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.fm .facts select{padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--paper);font-size:14px;max-width:100%}
+dl.fans{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:14px;line-height:1.55;margin:8px 0}
+dl.fans dt{color:var(--muted)} dl.fans dd{margin:0}
+dl.fans dt.fsec{grid-column:1/-1;color:var(--ink);font-weight:700;margin-top:8px;border-bottom:1px solid var(--line)}
+.fpics{margin-top:8px}
+.badge{display:inline-block;min-width:20px;padding:0 6px;border-radius:99px;background:var(--accent);color:#fff;font-size:12px;line-height:20px;text-align:center;margin-left:4px}
+.flink{display:grid;gap:4px;font-size:14px;margin:4px 0 0}
+.flink label{display:flex;gap:8px;align-items:center;color:var(--ink);font-size:14px}
+.flink input{width:18px;height:18px;padding:0;margin:0;accent-color:var(--accent)}
